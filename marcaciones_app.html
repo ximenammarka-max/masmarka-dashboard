@@ -220,13 +220,63 @@ body.dark{--bg:#0f1117;--sf:#1a1d27;--sf2:#22263a;--bd:#2e3347;--tx:#e8eaf0;--tx
 body.dark .sc,.body.dark .fld input,.body.dark .fld select{background:var(--sf);color:var(--tx);}
 body.dark .fsel,.body.dark .finput,.body.dark .fld input,.body.dark .fld select,.body.dark .chip,.body.dark .ota,.body.dark .multi-date-btn,.body.dark .multi-date-dropdown,.body.dark .mod{background:var(--sf);border-color:var(--bd);color:var(--tx);}
 body.dark .mdd-item:hover{background:var(--sf2);}
-body.dark .tc,.body.dark .pcard,.body.dark .ar,.body.dark .mi,.body.dark .panel,.body.dark .topbar,.body.dark .sc2{background:var(--sf);border-color:var(--bd);}
+body.dark .btn.bts{background:var(--sf2);border-color:var(--bd);color:var(--tx);}
+body.dark .btn.bts:hover{border-color:#8b90a8;color:#fff;}
+body.dark .fsel,body.dark .finput{background:var(--sf);border-color:var(--bd);color:var(--tx);}
+body.dark .multi-date-btn{background:var(--sf);border-color:var(--bd);color:var(--tx);}
+body.dark .tc,body.dark .pcard,body.dark .ar,body.dark .mi,body.dark .panel,body.dark .topbar,body.dark .sc2{background:var(--sf);border-color:var(--bd);}
 body.dark thead th{background:var(--sf2);}
 body.dark tbody tr:hover{background:var(--sf2);}
 body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
 .empty{text-align:center;padding:40px;color:var(--tx2);font-size:13px;}
 .twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
 .abs-cnt{position:absolute;top:0;right:0;bottom:0;left:0;}
+
+/* ── JORNADAS ──────────────────────────────────────────── */
+.jor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;}
+.jor-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:18px;box-shadow:var(--sh);}
+.jor-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.jor-nombre{font-size:13px;font-weight:700;}
+.jor-ci{font-size:11px;color:var(--tx2);margin-top:2px;}
+.jor-sem-badge{font-size:10px;font-weight:700;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 9px;color:var(--tx2);}
+.jor-bar-wrap{margin-bottom:12px;}
+.jor-horas{font-size:24px;font-weight:800;letter-spacing:-1px;}
+.jor-meta{font-size:11px;margin-top:2px;font-weight:600;}
+.jor-bar-bg{height:7px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:8px;}
+.jor-bar-fill{height:100%;border-radius:4px;transition:width .4s;}
+.jor-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.jor-stat{text-align:center;background:var(--sf2);border-radius:8px;padding:8px 4px;}
+.jor-stat-v{font-size:14px;font-weight:700;}
+.jor-stat-l{font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.jor-chips{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;}
+.jor-chip{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.jor-chip-ext{background:#ede9fe;color:#7c3aed;}
+.jor-chip-sin{background:var(--rd-bg);color:var(--rd);}
+.jor-detail-tbl{width:100%;border-collapse:collapse;margin-top:16px;font-size:12px;}
+.jor-detail-tbl th{padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px;background:var(--sf2);border-bottom:1px solid var(--bd);}
+.jor-detail-tbl td{padding:7px 10px;border-bottom:1px solid var(--bd);vertical-align:middle;}
+.jor-detail-tbl tr:last-child td{border-bottom:none;}
+.jor-tot-row td{background:var(--sf2);font-weight:700;border-top:2px solid var(--bd);}
+.al-panel{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-top:16px;}
+.al-head{padding:12px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.al-head h3{font-size:14px;font-weight:700;}
+.al-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.al-badge.red{background:var(--rd-bg);color:var(--rd);}
+.al-badge.ok{background:var(--gn-bg);color:var(--gn);}
+.al-list{padding:12px 18px;}
+.al-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);}
+.al-item:last-child{border-bottom:none;}
+.al-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.al-dot-er{background:var(--rd);}
+.al-dot-wa{background:var(--yw);}
+.al-dot-pu{background:#8b5cf6;}
+.al-dot-in{background:var(--bl);}
+.al-body{font-size:12px;flex:1;}
+.al-body strong{font-weight:600;}
+.al-date{font-size:11px;color:var(--tx2);margin-top:2px;}
+body.dark .jor-card,.body.dark .al-panel{background:var(--sf);border-color:var(--bd);}
+body.dark .jor-stat{background:var(--sf2);}
+body.dark .jor-bar-bg{background:var(--sf2);}
 </style>
 </head>
 <body>
@@ -281,6 +331,12 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
       <div class="ni" id="nav-productividad" onclick="showView('productividad')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Productividad
       </div>
+      <div class="ni" id="nav-pdv" onclick="showView('pdv')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>Reporte por PDV
+      </div>
+      <div class="ni" id="nav-jornadas" onclick="showView('jornadas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Análisis de Jornadas
+      </div>
       <div class="nsl" style="margin-top:14px">Personas</div>
       <div id="sbpersons"></div>
     </div>
@@ -303,6 +359,8 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
         <button class="ttab" id="tab-asistencia" onclick="showView('asistencia')">Asistencia</button>
         <button class="ttab" id="tab-marcaciones" onclick="showView('marcaciones')">Marcaciones</button>
         <button class="ttab" id="tab-productividad" onclick="showView('productividad')">Productividad</button>
+        <button class="ttab" id="tab-pdv" onclick="showView('pdv')">Reporte PDV</button>
+        <button class="ttab" id="tab-jornadas" onclick="showView('jornadas')">Jornadas</button>
       </div>
       <div class="tright">
         <div class="spill"><div class="rdot" id="rd2"></div><span id="rl2">—</span></div>
@@ -327,6 +385,7 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
         <select class="fsel" id="f-marca-res" onchange="renderResumen()"><option value="">Todas las marcas</option></select>
       </div>
       <div class="sg" id="res-stats"></div>
+      <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#e8404a;font-weight:600"></div>
       <div class="twocol">
         <div class="tc"><div class="tch"><span class="tct">Top PDV visitados</span></div><div style="padding:14px" id="chart-pdv"></div></div>
         <div class="tc"><div class="tch"><span class="tct">Visitas por marca</span></div><div style="padding:14px" id="chart-marca"></div></div>
@@ -396,6 +455,7 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
           </div>
         </div>
         <select class="fsel" id="f-marca-prod" onchange="renderProductividad()"><option value="">Todas las marcas</option></select>
+        <input class="finput" id="f-buscar-prod" placeholder="Buscar persona..." oninput="renderProductividad()" style="width:180px">
         <select class="fsel" id="f-orden-prod" onchange="renderProductividad()">
           <option value="cumplimiento">Por cumplimiento</option><option value="horas">Por horas</option>
           <option value="visitas">Por visitas</option><option value="pdv">Por PDV únicos</option>
@@ -408,10 +468,71 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
         <tbody id="prod-tbody"></tbody></table>
       </div>
     </div>
+
+    <!-- REPORTE PDV -->
+    <div id="view-pdv" class="content" style="display:none">
+      <div class="ph"><h1>Reporte por Punto de Venta</h1><p>Horas trabajadas y visitas por PDV y persona</p></div>
+      <div class="filters">
+        <div class="multi-date-wrap">
+          <div class="multi-date-btn" id="mdb-pdv" onclick="toggleMDD('mdd-pdv')">
+            📅 <span id="mdb-pdv-label">Todas las fechas</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="multi-date-dropdown" id="mdd-pdv">
+            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-pdv')"><input type="checkbox" id="mdd-pdv-all" checked> Todas las fechas</div>
+            <div id="mdd-pdv-items"></div>
+          </div>
+        </div>
+        <select class="fsel" id="f-marca-pdv" onchange="renderPDV()"><option value="">Todas las marcas</option></select>
+        <input class="finput" id="f-buscar-pdv" placeholder="Buscar PDV o persona..." oninput="renderPDV()" style="width:200px">
+        <select class="fsel" id="f-agrupar-pdv" onchange="renderPDV()">
+          <option value="pdv">Agrupar por PDV</option>
+          <option value="persona">Agrupar por persona</option>
+        </select>
+        <button class="btn bts btsm" onclick="exportarPDV()">↓ CSV</button>
+      </div>
+      <div class="sg" style="grid-template-columns:repeat(4,1fr)" id="pdv-stats"></div>
+      <div class="tc" style="margin-top:16px">
+        <div class="tch"><span class="tct" id="pdv-table-title">Detalle por PDV</span><span class="tcc" id="pdv-count"></span></div>
+        <table><thead id="pdv-thead"></thead><tbody id="pdv-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- JORNADAS -->
+    <div id="view-jornadas" class="content" style="display:none">
+      <div class="ph"><h1>Análisis de Jornadas</h1><p>Horas semanales, horas extra y alertas de cumplimiento por empleado</p></div>
+      <div class="filters">
+        <button class="btn btp btsm" onclick="cargarJornadasDesdeAPI()">↺ Cargar desde Google Sheets</button>
+        <label class="btn bts btsm" style="cursor:pointer">
+          📂 Subir Excel / CSV
+          <input type="file" id="fi-jornadas" accept=".xls,.xlsx,.csv" style="display:none" onchange="handleJornadasFile(this)">
+        </label>
+        <select class="fsel" id="j-emp" onchange="renderJornadas()" style="display:none"><option value="">Todos los empleados</option></select>
+        <select class="fsel" id="j-sem" onchange="renderJornadas()" style="display:none"><option value="">Todas las semanas</option></select>
+        <button class="btn bts btsm" id="j-dl" style="display:none" onclick="exportJornadasExcel()">↓ Excel</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="sg" id="j-kpis" style="display:none;grid-template-columns:repeat(4,1fr)"></div>
+
+      <!-- Alerta resumen inline -->
+      <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#e8404a;font-weight:600"></div>
+
+      <!-- Content -->
+      <div id="j-content">
+        <div class="empty" style="padding:60px">
+          <div style="font-size:40px;margin-bottom:12px">⏱️</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Sin datos de jornadas</div>
+          <div style="font-size:13px;color:var(--tx2)">Hacé clic en "Cargar desde Google Sheets" o subí un Excel/CSV</div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 </div>
 <!-- PANEL -->
+
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="panel" id="panel">
   <div class="ph2"><div><h2 id="ptitle">—</h2><p id="psub">—</p></div><div class="pc" onclick="closePanel()">✕</div></div>
@@ -540,7 +661,10 @@ async function cargarDatosAPI(){
   const r2=await fetch(`${base}/Hoja%202!A2:C2000${k}`);
   const d2=await r2.json();
   if(d2.error)throw new Error(d2.error.message);
-  S.personas=(d2.values||[]).map(r=>({nombre:(r[0]||'').trim(),ci:String(r[1]||'').trim().split('.')[0],marca:(r[2]||'').trim()})).filter(p=>p.nombre);
+  S.personas=(d2.values||[]).map(r=>({nombre:(r[0]||'').trim(),ci:String(r[1]||'').trim().split('.')[0],marca:(r[2]||'').trim()})).filter(p=>p.nombre&&p.ci);
+  // Deduplicar por CI
+  const seen=new Set();
+  S.personas=S.personas.filter(p=>{if(seen.has(p.ci))return false;seen.add(p.ci);return true;});
   const r3=await fetch(`${base}/Hoja%203!A2:G9999${k}`);
   const d3=await r3.json();
   if(d3.error)throw new Error(d3.error.message);
@@ -701,7 +825,7 @@ function poblarFiltros(){
   const personas=[...new Set(S.marcaciones.map(m=>m.nombre))].sort();
 
   // Populate multi-date dropdowns
-  ['res','asist','marc','prod'].forEach(prefix=>{
+  ['res','asist','marc','prod','pdv'].forEach(prefix=>{
     const cont=document.getElementById(`mdd-${prefix}-items`);if(!cont)return;
     const isAsist=prefix==='asist';
     cont.innerHTML=fechas.map(f=>`
@@ -714,7 +838,7 @@ function poblarFiltros(){
   });
 
   // Marca selects
-  ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','exp-marca'].forEach(id=>{
+  ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','f-marca-pdv','exp-marca'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const old=el.value;
     el.innerHTML=id==='exp-marca'?'<option value="">Todas</option>':'<option value="">Todas las marcas</option>';
@@ -756,12 +880,17 @@ function renderResumen(){
   const presentes=new Set(marc.map(m=>m.ci)).size;
   const pdvU=new Set(marc.map(m=>m.pdv)).size;
   const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
+  const sinSalida=marc.filter(m=>m.entrada&&!m.salida).length;
 
   document.getElementById('res-stats').innerHTML=`
     <div class="sc2"><div class="slbl">Marcaciones</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
     <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">de ${S.personas.length} registradas</div></div>
-    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">PDV únicos</div><div class="sval" style="color:var(--bl)">${pdvU}</div><div class="ssub">puntos visitados</div></div>
-    <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">Horas registradas</div><div class="sval" style="color:var(--yw)">${Math.round(mins/60*10)/10}h</div><div class="ssub">con entrada y salida</div></div>`;
+    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Horas registradas</div><div class="sval" style="color:var(--bl)">${Math.round(mins/60*10)/10}h</div><div class="ssub">con entrada y salida</div></div>
+    <div class="sc2" style="border-color:#e8404a44;cursor:pointer" onclick="filtrarIncompletas()">
+      <div class="slbl">⚠️ Sin check out</div>
+      <div class="sval" style="color:var(--rd)">${sinSalida}</div>
+      <div class="ssub" style="color:var(--rd)">${sinSalida>0?'Clic para ver':'Todo completo ✓'}</div>
+    </div>`;
 
   const pdvC={},mC={};
   marc.forEach(m=>{pdvC[m.pdv]=(pdvC[m.pdv]||0)+1;mC[m.marca]=(mC[m.marca]||0)+1;});
@@ -871,26 +1000,70 @@ function renderAsistencia(){
 }
 
 // ── MARCACIONES ───────────────────────────────────────────────────────
+function filtrarIncompletas(){
+  // Switch to marcaciones view and filter only those without checkout
+  showView('marcaciones');
+  // Set a flag to show only incomplete
+  document.getElementById('f-pdv-marc').value='';
+  document.getElementById('f-persona-marc').value='';
+  document.getElementById('f-marca-marc').value='';
+  // Uncheck all dates, check all
+  document.querySelectorAll('#mdd-marc-items .mdd-item input').forEach(i=>i.checked=true);
+  document.getElementById('mdd-marc-all').checked=true;
+  updateMDDLabel('mdd-marc');
+  S._soloIncompletas=true;
+  renderMarcaciones();
+}
+
 function renderMarcaciones(){
   const fechas=getSelDates('mdd-marc');
   const marca=document.getElementById('f-marca-marc').value;
   const persona=document.getElementById('f-persona-marc').value;
   const pdvq=document.getElementById('f-pdv-marc').value;
-  const marc=filtrar({fechas,marca,nombre:persona,pdv:pdvq});
+  let marc=filtrar({fechas,marca,nombre:persona,pdv:pdvq});
+
+  const soloInc=S._soloIncompletas||false;
+  if(soloInc) marc=marc.filter(m=>m.entrada&&!m.salida);
+
+  const sinSalida=marc.filter(m=>m.entrada&&!m.salida).length;
+
+  // Show alert banner if there are incomplete
+  const banner=sinSalida>0&&!soloInc?`
+    <div style="background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;color:#e8404a;font-weight:600">⚠️ ${sinSalida} marcación${sinSalida!==1?'es':''} sin check out</span>
+      <button class="btn btsm" style="background:#e8404a;color:#fff;border:none;font-size:12px" onclick="S._soloIncompletas=true;renderMarcaciones()">Ver solo incompletas</button>
+    </div>`:'';
+
+  const filterBanner=soloInc?`
+    <div style="background:#fef3c7;border:1px solid #f59e0b44;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;color:#d97706;font-weight:600">⚠️ Mostrando solo marcaciones sin check out (${marc.length})</span>
+      <button class="btn btsm bts" onclick="S._soloIncompletas=false;renderMarcaciones()">✕ Mostrar todas</button>
+    </div>`:'';
+
   const rows=marc.map(m=>{
     const obs=getObs(m.id);
-    return`<tr>
+    const incompleta=m.entrada&&!m.salida;
+    return`<tr style="${incompleta?'background:#fff8f8':''}">
       <td class="mono">${m.ci}</td><td style="font-weight:600">${m.nombre}</td>
       <td><span class="pill pdk" style="font-size:11px">${m.marca}</span></td>
       <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.pdv}</td>
-      <td class="mono">${m.fecha}</td><td class="mono">${m.entrada||'—'}</td>
-      <td class="mono">${m.salida||'—'}</td><td class="mono">${m.duracion||'—'}</td>
+      <td class="mono">${m.fecha}</td>
+      <td class="mono">${m.entrada||'—'}</td>
+      <td class="mono">${incompleta?'<span style="color:#e8404a;font-weight:600">⚠️ Sin check out</span>':m.salida||'—'}</td>
+      <td class="mono">${m.duracion||'—'}</td>
       <td>${obs.cat?catPill(obs.cat):''}</td>
       <td><button class="btn bts btsm" onclick="openMarcacion(${m.id})">Ver</button></td>
     </tr>`;
   }).join('');
+
+  // Insert banners before table
+  const tableCard=document.querySelector('#view-marcaciones .tc');
+  let bannerEl=document.getElementById('marc-banner');
+  if(!bannerEl){bannerEl=document.createElement('div');bannerEl.id='marc-banner';tableCard.parentNode.insertBefore(bannerEl,tableCard);}
+  bannerEl.innerHTML=filterBanner+banner;
+
   document.getElementById('marc-tbody').innerHTML=rows||'<tr><td colspan="10" class="empty">Sin marcaciones</td></tr>';
-  document.getElementById('marc-count').textContent=`${marc.length} registros`;
+  document.getElementById('marc-count').textContent=`${marc.length} registros${soloInc?' (incompletas)':''}`;
 }
 
 // ── PRODUCTIVIDAD ─────────────────────────────────────────────────────
@@ -898,7 +1071,12 @@ function renderProductividad(){
   const fechas=getSelDates('mdd-prod');
   const marca=document.getElementById('f-marca-prod').value;
   const orden=document.getElementById('f-orden-prod').value;
-  let personas=S.personas.filter(p=>!marca||p.marca===marca);
+  const buscar=(document.getElementById('f-buscar-prod')?.value||'').toLowerCase();
+  let personas=S.personas.filter(p=>{
+    if(marca&&p.marca!==marca)return false;
+    if(buscar&&!p.nombre.toLowerCase().includes(buscar)&&!p.ci.includes(buscar))return false;
+    return true;
+  });
   const data=personas.map(p=>({...p,...getStats(p.ci,fechas)}));
   data.sort((a,b)=>orden==='horas'?b.totalMins-a.totalMins:orden==='visitas'?b.visitas-a.visitas:orden==='pdv'?b.pdvUnicos-a.pdvUnicos:b.cumplimiento-a.cumplimiento);
   const rows=data.map((p,i)=>{
@@ -1002,6 +1180,7 @@ function openObsDia(ci,nombre,marca,fechasStr){
   const marcDia=filtrar({fechas,marca}).filter(m=>m.ci===ci);
   const present=marcDia.length>0;
   const mins=marcDia.reduce((s,v)=>s+dToM(v.duracion),0);
+  const allFechas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
 
   const visHTML=marcDia.length>0?`
     <div style="margin-bottom:12px">
@@ -1013,13 +1192,12 @@ function openObsDia(ci,nombre,marca,fechasStr){
         <span style="font-size:12px;color:var(--gn);font-weight:600">${v.duracion||'—'}</span>
       </div>`).join('')}
       ${mins>0?`<div style="text-align:right;padding-top:6px;font-size:13px;font-weight:700;color:var(--gn)">Total: ${mToH(mins)}</div>`:''}
-    </div>`:'<div style="padding:10px 0;color:var(--tx2);font-size:13px">No registró marcaciones en el período seleccionado.</div>';
+    </div>`:`<div style="padding:10px 0;color:var(--tx2);font-size:13px">No registró marcaciones en el período seleccionado.</div>`;
 
-  // Show obs per date if multiple dates
   const multiObsHTML=fechas.length>1?`
     <div class="ps"><div class="pst">Estado por fecha</div>
       ${fechas.map(f=>{const o=getDO(ci,f);const worked=marcDia.some(m=>m.fecha===f);
-        return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)48">
+        return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)">
           <span style="font-size:12px;min-width:80px">${f}</span>
           ${worked?'<span class="pill pg">✅ Presente</span>':o.cat?catPill(o.cat):'<span class="pill pr">❌ Ausente</span>'}
           ${o.txt?`<span style="font-size:11px;color:var(--tx2)">${o.txt}</span>`:''}
@@ -1029,12 +1207,43 @@ function openObsDia(ci,nombre,marca,fechasStr){
   document.getElementById('ptitle').textContent=nombre;
   document.getElementById('psub').textContent=`${fechas.length>1?fechas.length+' fechas':primera} · ${marca}`;
   document.getElementById('pbody').innerHTML=`
-    <div class="ps"><div class="pst">Estado general · ${fechas.length>1?fechas.length+' fechas':primera}</div>
-      ${present?`<span class="pill pg" style="margin-bottom:10px;display:inline-flex">✅ ${marcDia.length} visita${marcDia.length!==1?'s':''} registradas</span>`:'<span class="pill pr" style="margin-bottom:10px;display:inline-flex">❌ Sin marcación</span>'}
+    <div class="ps"><div class="pst">Estado · ${fechas.length>1?fechas.length+' fechas':primera}</div>
+      ${present?`<span class="pill pg" style="margin-bottom:10px;display:inline-flex">✅ ${marcDia.length} visita${marcDia.length!==1?'s':''} registradas</span>`:`<span class="pill pr" style="margin-bottom:10px;display:inline-flex">❌ Sin marcación</span>`}
       ${visHTML}
     </div>
     ${multiObsHTML}
-    <div class="ps"><div class="pst">Categoría ${fechas.length>1?'(aplica a '+primera+')':''}</div>
+    <div class="ps">
+      <div class="pst">Aplicar categoría por rango</div>
+      <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Desde</label>
+            <select id="range-desde" style="width:100%;padding:7px 10px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-family:var(--fn);font-size:13px;outline:none">
+              ${allFechas.map(f=>`<option value="${f}" ${f===primera?'selected':''}}>${f}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Hasta</label>
+            <select id="range-hasta" style="width:100%;padding:7px 10px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-family:var(--fn);font-size:13px;outline:none">
+              ${allFechas.map(f=>`<option value="${f}" ${f===primera?'selected':''}}>${f}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Categoría</label>
+          <div class="chips" id="chips-range">
+            ${CATS.map(c=>`<div class="chip" onclick="selChip('range_${ci}','${c.id}',this,'range')">${c.label}</div>`).join('')}
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Nota del rango</label>
+          <input id="range-nota" type="text" placeholder="Ej: Licencia por maternidad..." style="width:100%;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;background:var(--sf);color:var(--tx);font-family:var(--fn);font-size:13px;outline:none">
+        </div>
+        <button class="btn btp" style="width:100%" onclick="aplicarRango('${ci}')">✓ Aplicar a todos los días del rango</button>
+        <div id="range-saved" style="display:none;text-align:center;font-size:12px;color:var(--gn);font-weight:600;margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="ps"><div class="pst">Categoría para ${primera}</div>
       <div class="chips" id="chips-d">${CATS.map(c=>`<div class="chip ${obs.cat===c.id?c.cls+' selected':''}" onclick="selChip('${ci}_${primera}','${c.id}',this,'d')">${c.label}</div>`).join('')}</div>
     </div>
     <div class="ps"><div class="pst">Observación</div>
@@ -1044,6 +1253,25 @@ function openObsDia(ci,nombre,marca,fechasStr){
   document.getElementById('psavebtn').onclick=()=>saveDObs(ci,primera);
   openPanel();
 }
+
+function aplicarRango(ci){
+  const desde=document.getElementById('range-desde').value;
+  const hasta=document.getElementById('range-hasta').value;
+  const cat=_pending['range_range_'+ci]||_pending['range_'+ci]||'';
+  const nota=document.getElementById('range-nota').value;
+  if(!cat){alert('Seleccioná una categoría');return;}
+  const allF=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const rango=allF.filter(f=>f>=desde&&f<=hasta);
+  let aplicados=0;
+  rango.forEach(f=>{
+    const worked=S.marcaciones.some(m=>m.ci===ci&&m.fecha===f);
+    if(!worked){sDO(ci,f,cat,nota);aplicados++;}
+  });
+  const el=document.getElementById('range-saved');
+  if(el){el.style.display='block';el.textContent=`✓ Aplicado a ${aplicados} día(s) sin marcación`;setTimeout(()=>el.style.display='none',3000);}
+  renderAsistencia();
+}
+
 
 function selChip(id,catId,el,ctx){
   const chips=el.closest('.chips').querySelectorAll('.chip');
@@ -1074,12 +1302,13 @@ function closePanel(){document.getElementById('panel').classList.remove('open');
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function showView(v){
-  ['resumen','asistencia','marcaciones','productividad'].forEach(n=>{
+  ['resumen','asistencia','marcaciones','productividad','pdv','jornadas'].forEach(n=>{
     document.getElementById(`view-${n}`).style.display=n===v?'block':'none';
     document.getElementById(`nav-${n}`)?.classList.toggle('active',n===v);
     document.getElementById(`tab-${n}`)?.classList.toggle('active',n===v);
   });
   if(v==='asistencia')renderAsistencia();
+  if(v==='pdv')renderPDV();
 }
 
 // ── EXPORT CSV ────────────────────────────────────────────────────────
@@ -1164,14 +1393,6 @@ async function generarPPT(){
   const marca=document.getElementById('f-marca-asist').value;
   if(!fechas||fechas.length===0){alert('Seleccioná al menos una fecha');return;}
 
-  if(!window.PptxGenJS){
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js';
-    await new Promise((res,rej)=>{s.onload=res;s.onerror=rej;document.head.appendChild(s);});
-  }
-
-  const pptx=new PptxGenJS();pptx.layout='LAYOUT_WIDE';
-  const BG='F0F2F5',SF='FFFFFF',DK='1A1F2E',GN='2EB872',RD='E8404A',T2='6B7280',BD='E8EAED';
   const marcFilt=filtrar({fechas,marca});
   const porCI={};marcFilt.forEach(m=>{if(!porCI[m.ci])porCI[m.ci]=[];porCI[m.ci].push(m);});
   const presenceMap={};marcFilt.forEach(m=>{if(!presenceMap[m.ci])presenceMap[m.ci]=new Set();presenceMap[m.ci].add(m.fecha);});
@@ -1180,81 +1401,562 @@ async function generarPPT(){
   const presentes=new Set(marcFilt.map(m=>m.ci)).size;
   const hrsTotal=marcFilt.reduce((s,m)=>s+dToM(m.duracion),0);
   const fechaLabel=fechas.length===1?fechas[0]:fechas[0]+' → '+fechas[fechas.length-1];
+  const pct=total>0?Math.round(presentes/total*100):0;
+  const pctColor=pct>=80?'#2eb872':pct>=50?'#f59e0b':'#e8404a';
 
-  // Cover
-  const cover=pptx.addSlide();cover.background={color:DK};
-  cover.addShape(pptx.ShapeType.rect,{x:0,y:0,w:.15,h:7.5,fill:{color:GN}});
-  cover.addText('+MARKA CONTROL',{x:.4,y:.9,w:12,h:.7,fontSize:34,bold:true,color:'FFFFFF',fontFace:'Arial'});
-  cover.addText('REPORTE DE MARCACIONES',{x:.4,y:1.65,w:12,h:.45,fontSize:16,color:'8B90A8',fontFace:'Arial'});
-  cover.addText(fechaLabel,{x:.4,y:2.3,w:6,h:.45,fontSize:18,bold:true,color:GN,fontFace:'Arial'});
-  const sts=[
-    {l:'Presentes',v:presentes,c:GN},{l:'Ausentes',v:total-presentes,c:RD},
-    {l:'Cobertura',v:Math.round(presentes/total*100)+'%',c:presentes/total>=.8?GN:'F59E0B'},
-    {l:'Visitas',v:marcFilt.length,c:'3B82F6'},{l:'Horas totales',v:mToH(hrsTotal),c:'F59E0B'},
-    {l:'PDV únicos',v:new Set(marcFilt.map(m=>m.pdv)).size,c:'8B5CF6'},
-  ];
-  sts.forEach((s,i)=>{const col=i%3,row=Math.floor(i/3);const x=.4+col*4.2,y=3.5+row*1.4;
-    cover.addShape(pptx.ShapeType.rect,{x,y,w:3.8,h:1.2,fill:{color:'252B3D'},line:{color:'2E3650',pt:1}});
-    cover.addText(String(s.v),{x,y:y+.05,w:3.8,h:.72,fontSize:24,bold:true,color:s.c,fontFace:'Arial',align:'center'});
-    cover.addText(s.l,{x,y:y+.74,w:3.8,h:.28,fontSize:9,color:'8B90A8',fontFace:'Arial',align:'center'});
-  });
-  cover.addText(`+Marka Control · ${fechaLabel}`,{x:.4,y:7.3,w:10,h:.15,fontSize:7,color:'3D4263',fontFace:'Arial'});
+  let slides=``;
+
+  // Slide 1: Cover
+  slides+=`
+  <div class="slide">
+    <div class="slide-accent"></div>
+    <div class="slide-content cover-content">
+      <div class="cover-badge">+MARKA CONTROL</div>
+      <h1 class="cover-title">REPORTE DE<br>MARCACIONES</h1>
+      <div class="cover-date">${fechaLabel}</div>
+      <div class="cover-stats">
+        ${[
+          {l:'Presentes',v:presentes,c:'#2eb872'},
+          {l:'Ausentes',v:total-presentes,c:'#e8404a'},
+          {l:'Cobertura',v:pct+'%',c:pctColor},
+          {l:'Visitas',v:marcFilt.length,c:'#3b82f6'},
+          {l:'Horas totales',v:mToH(hrsTotal),c:'#f59e0b'},
+          {l:'PDV únicos',v:new Set(marcFilt.map(m=>m.pdv)).size,c:'#8b5cf6'},
+        ].map(s=>`<div class="cstat"><div class="cstat-val" style="color:${s.c}">${s.v}</div><div class="cstat-lbl">${s.l}</div></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
 
   // One slide per marca
   marcas.forEach(mrc=>{
     const persMarca=S.personas.filter(p=>p.marca===mrc&&(!marca||p.marca===marca));
     if(!persMarca.length)return;
-    const slide=pptx.addSlide();slide.background={color:BG};
-    slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:.12,h:7.5,fill:{color:DK}});
-    slide.addShape(pptx.ShapeType.rect,{x:.12,y:0,w:13.21,h:.75,fill:{color:SF},line:{color:BD,pt:1}});
-    slide.addText(mrc,{x:.3,y:0,w:8,h:.75,fontSize:17,bold:true,color:DK,fontFace:'Arial',valign:'middle'});
-    slide.addText(fechaLabel,{x:9,y:0,w:4.3,h:.75,fontSize:11,color:T2,fontFace:'Arial',valign:'middle',align:'right'});
     const mPres=persMarca.filter(p=>presenceMap[p.ci]&&presenceMap[p.ci].size>0).length;
-    const mAus=persMarca.length-mPres;const mPct=Math.round(mPres/persMarca.length*100);
+    const mAus=persMarca.length-mPres;
+    const mPct=Math.round(mPres/persMarca.length*100);
     const mHrs=persMarca.reduce((s,p)=>{const mv=porCI[p.ci]||[];return s+mv.reduce((ss,m)=>ss+dToM(m.duracion),0);},0);
-    [{l:'Equipo',v:persMarca.length},{l:'Presentes',v:mPres,c:GN},{l:'Ausentes',v:mAus,c:RD},{l:'Cobertura',v:mPct+'%',c:mPct>=80?GN:'F59E0B'},{l:'Horas',v:mToH(mHrs),c:'F59E0B'}].forEach((s,i)=>{
-      const x=8.9+i*.95;
-      slide.addShape(pptx.ShapeType.rect,{x,y:.85,w:.85,h:.7,fill:{color:SF},line:{color:BD,pt:1}});
-      slide.addText(String(s.v),{x,y:.85,w:.85,h:.44,fontSize:13,bold:true,color:s.c||DK,fontFace:'Arial',align:'center',valign:'middle'});
-      slide.addText(s.l,{x,y:1.24,w:.85,h:.26,fontSize:7,color:T2,fontFace:'Arial',align:'center'});
-    });
+    const mPctColor=mPct>=80?'#2eb872':mPct>=50?'#f59e0b':'#e8404a';
 
-    const TY=1.65;const maxR=Math.floor((7.5-TY-.4-.3)/.42);
-    const rowH=Math.min(.42,(7.5-TY-.4)/Math.min(persMarca.length,maxR));
-    const cols=[{l:'CI',x:.2,w:1.0},{l:'Nombre',x:1.25,w:3.0},{l:'Estado',x:4.3,w:1.5},{l:'Días',x:5.85,w:.7},{l:'Horas',x:6.6,w:.9},{l:'Visitas',x:7.55,w:.75},{l:'PDV',x:8.35,w:3.2},{l:'Obs',x:11.6,w:1.7}];
-    cols.forEach(c=>{
-      slide.addShape(pptx.ShapeType.rect,{x:c.x,y:TY,w:c.w,h:.3,fill:{color:'F7F8FA'},line:{color:BD,pt:.5}});
-      slide.addText(c.l,{x:c.x,y:TY,w:c.w,h:.3,fontSize:7.5,bold:true,color:T2,fontFace:'Arial',align:'center',valign:'middle'});
-    });
-
-    persMarca.slice(0,maxR).forEach((p,ri)=>{
-      const vis=porCI[p.ci]||[];const diasP=(presenceMap[p.ci]||new Set()).size;const present=diasP>0;
+    const tableRows=persMarca.map((p,i)=>{
+      const vis=porCI[p.ci]||[];
+      const diasP=(presenceMap[p.ci]||new Set()).size;
+      const present=diasP>0;
       const obs=getDO(p.ci,fechas[0]);
-      const ry=TY+.3+ri*rowH;const rbg=ri%2===0?SF:'F7F8FA';
       const pdvStr=[...new Set(vis.map(v=>v.pdv))].join(', ');
       const mins=vis.reduce((s,v)=>s+dToM(v.duracion),0);
-      const estLabel=present?`✅ ${diasP}/${fechas.length}d`:obs.cat?getCatLabelShort(obs.cat):'❌ Ausente';
-      const estColor=present?GN:(obs.cat&&!restaProd(obs.cat)?'8B5CF6':RD);
-      cols.forEach(c=>slide.addShape(pptx.ShapeType.rect,{x:c.x,y:ry,w:c.w,h:rowH,fill:{color:rbg},line:{color:BD,pt:.3}}));
-      const rd=[
-        {c:cols[0],t:p.ci,col:T2},{c:cols[1],t:p.nombre,col:DK,bold:true},
-        {c:cols[2],t:estLabel,col:estColor},{c:cols[3],t:String(diasP||'0'),col:T2},
-        {c:cols[4],t:mins>0?mToH(mins):'—',col:mins>0?'1A6B2E':T2},
-        {c:cols[5],t:String(vis.length||'0'),col:T2},
-        {c:cols[6],t:pdvStr.length>35?pdvStr.slice(0,35)+'…':pdvStr||'—',col:T2},
-        {c:cols[7],t:(obs.txt||obs.texto||'').slice(0,20)||(obs.cat&&!present?obs.cat:''),col:T2},
-      ];
-      rd.forEach(r=>slide.addText(r.t,{x:r.c.x+.04,y:ry,w:r.c.w-.08,h:rowH,fontSize:7.5,color:r.col||T2,fontFace:'Arial',bold:r.bold||false,valign:'middle',align:r.c.l==='Nombre'||r.c.l==='PDV'||r.c.l==='Obs'?'left':'center'}));
-    });
-    if(persMarca.length>maxR)slide.addText(`+ ${persMarca.length-maxR} personas más`,{x:.2,y:7.25,w:8,h:.2,fontSize:8,color:T2,fontFace:'Arial',italic:true});
-    slide.addText(`+Marka Control · ${mrc} · ${fechaLabel}`,{x:.2,y:7.3,w:10,h:.15,fontSize:7,color:'AAAAAA',fontFace:'Arial'});
+      const estLabel=present?`✅ ${diasP}/${fechas.length}d`:obs.cat?getCat(obs.cat).label:'❌ Ausente';
+      const estColor=present?'#2eb872':(obs.cat&&!restaProd(obs.cat)?'#8b5cf6':'#e8404a');
+      const bg=i%2===0?'#ffffff':'#f7f8fa';
+      return`<tr style="background:${bg}">
+        <td style="font-family:monospace;font-size:11px;color:#6b7280">${p.ci}</td>
+        <td style="font-weight:600;font-size:12px">${p.nombre}</td>
+        <td style="font-size:11px;color:${estColor};font-weight:600">${estLabel}</td>
+        <td style="font-size:11px;color:#6b7280;text-align:center">${diasP||'0'}</td>
+        <td style="font-size:11px;color:${mins>0?'#2eb872':'#6b7280'};font-weight:${mins>0?'600':'400'}">${mins>0?mToH(mins):'—'}</td>
+        <td style="font-size:11px;color:#6b7280;text-align:center">${vis.length||'0'}</td>
+        <td style="font-size:11px;color:#6b7280;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${pdvStr}">${pdvStr.slice(0,40)||'—'}</td>
+        <td style="font-size:11px;color:#6b7280">${(obs.txt||obs.texto||'').slice(0,25)||''}</td>
+      </tr>`;
+    }).join('');
+
+    slides+=`
+    <div class="slide">
+      <div class="slide-accent"></div>
+      <div class="slide-content">
+        <div class="slide-header">
+          <div>
+            <div class="slide-marca">${mrc}</div>
+            <div class="slide-fecha">${fechaLabel}</div>
+          </div>
+          <div class="marca-stats">
+            <div class="mstat"><div class="mstat-v">${persMarca.length}</div><div class="mstat-l">Equipo</div></div>
+            <div class="mstat"><div class="mstat-v" style="color:#2eb872">${mPres}</div><div class="mstat-l">Presentes</div></div>
+            <div class="mstat"><div class="mstat-v" style="color:#e8404a">${mAus}</div><div class="mstat-l">Ausentes</div></div>
+            <div class="mstat"><div class="mstat-v" style="color:${mPctColor}">${mPct}%</div><div class="mstat-l">Cobertura</div></div>
+            <div class="mstat"><div class="mstat-v" style="color:#f59e0b">${mToH(mHrs)}</div><div class="mstat-l">Horas</div></div>
+          </div>
+        </div>
+        <table class="slide-table">
+          <thead><tr>
+            <th>CI</th><th>Nombre y Apellido</th><th>Estado</th>
+            <th>Días</th><th>Horas</th><th>Visitas</th><th>PDV visitados</th><th>Observación</th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
   });
 
-  const fname=`Reporte_${fechaLabel.replace(/[\/\s→]/g,'-').replace(/-+/g,'-')}.pptx`;
-  await pptx.writeFile({fileName:fname});
+  const html=`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reporte ${fechaLabel} — +Marka Control</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#e0e0e0;padding:30px;}
+  h1,h2{margin:0;}
+  .slide{width:1100px;min-height:620px;background:#f0f2f5;margin:0 auto 30px;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;position:relative;}
+  .slide-accent{width:12px;flex-shrink:0;background:#1a1f2e;}
+  .slide-content{flex:1;padding:28px 32px;display:flex;flex-direction:column;}
+  /* Cover */
+  .cover-content{background:#1a1f2e;justify-content:center;}
+  .cover-badge{font-size:11px;font-weight:700;color:#2eb872;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+  .cover-title{font-size:42px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:14px;letter-spacing:-1px;}
+  .cover-date{font-size:18px;font-weight:600;color:#2eb872;margin-bottom:32px;}
+  .cover-stats{display:flex;gap:16px;flex-wrap:wrap;}
+  .cstat{background:#252b3d;border:1px solid #2e3650;border-radius:10px;padding:14px 20px;text-align:center;min-width:130px;}
+  .cstat-val{font-size:26px;font-weight:800;margin-bottom:4px;}
+  .cstat-lbl{font-size:11px;color:#8b90a8;text-transform:uppercase;letter-spacing:.5px;}
+  /* Slide */
+  .slide-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #e8eaed;}
+  .slide-marca{font-size:22px;font-weight:800;color:#1a1f2e;letter-spacing:-.3px;}
+  .slide-fecha{font-size:12px;color:#6b7280;margin-top:3px;}
+  .marca-stats{display:flex;gap:10px;}
+  .mstat{background:#fff;border:1px solid #e8eaed;border-radius:8px;padding:8px 14px;text-align:center;min-width:70px;}
+  .mstat-v{font-size:18px;font-weight:800;color:#1a1f2e;}
+  .mstat-l{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;}
+  .slide-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .slide-table thead th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;background:#f7f8fa;border-bottom:2px solid #e8eaed;}
+  .slide-table tbody tr{border-bottom:1px solid #e8eaed;}
+  .slide-table tbody td{padding:8px 10px;vertical-align:middle;}
+  @media print{body{background:white;padding:0;}.slide{margin:0;border-radius:0;box-shadow:none;page-break-after:always;min-height:100vh;}}
+</style>
+</head>
+<body>
+${slides}
+<div style="text-align:center;color:#999;font-size:12px;margin-top:10px">
+  +Marka Control · Reporte generado el ${new Date().toLocaleDateString('es-PY')} · Para imprimir: Ctrl+P
+</div>
+</body>
+</html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Reporte_${fechaLabel.replace(/[\/\s→]/g,'-').replace(/-+/g,'-')}.html`;
+  a.click();URL.revokeObjectURL(a.href);
 }
 
-function getCatLabelShort(id){const c=getCat(id);return c?c.label.slice(0,10):id;}
+
+// ── REPORTE PDV ───────────────────────────────────────────────────────
+function renderPDV(){
+  const fechas=getSelDates('mdd-pdv');
+  const marca=document.getElementById('f-marca-pdv').value;
+  const buscar=(document.getElementById('f-buscar-pdv')?.value||'').toLowerCase();
+  const agrupar=document.getElementById('f-agrupar-pdv').value;
+  const marc=filtrar({fechas,marca});
+  const totalMins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
+  document.getElementById('pdv-stats').innerHTML=`
+    <div class="sc2"><div class="slbl">Total visitas</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
+    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${mToH(totalMins)}</div><div class="ssub">con entrada y salida</div></div>
+    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">PDV únicos</div><div class="sval" style="color:var(--bl)">${new Set(marc.map(m=>m.pdv)).size}</div><div class="ssub">puntos visitados</div></div>
+    <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--yw)">${new Set(marc.map(m=>m.ci)).size}</div><div class="ssub">merchants</div></div>`;
+  let rows='',thead='';
+  if(agrupar==='pdv'){
+    document.getElementById('pdv-table-title').textContent='Horas por Punto de Venta';
+    thead=`<tr><th>Punto de Venta</th><th>Visitas</th><th>Personas</th><th>Horas totales</th><th>Promedio/visita</th><th></th></tr>`;
+    const byPDV={};
+    marc.forEach(m=>{if(!byPDV[m.pdv])byPDV[m.pdv]={visitas:[],personas:new Set(),mins:0};byPDV[m.pdv].visitas.push(m);byPDV[m.pdv].personas.add(m.ci);byPDV[m.pdv].mins+=dToM(m.duracion);});
+    const filtered=Object.entries(byPDV).sort((a,b)=>b[1].mins-a[1].mins).filter(([pdv])=>!buscar||pdv.toLowerCase().includes(buscar));
+    rows=filtered.map(([pdv,d],i)=>{
+      const avg=d.visitas.length>0?Math.round(d.mins/d.visitas.length):0;
+      return`<tr style="${i%2===0?'':'background:var(--sf2)'}">
+        <td style="font-weight:600">${pdv}</td><td class="mono">${d.visitas.length}</td>
+        <td class="mono">${d.personas.size}</td>
+        <td class="mono" style="font-weight:700;color:var(--gn)">${d.mins>0?mToH(d.mins):'—'}</td>
+        <td class="mono">${avg>0?mToH(avg):'—'}</td>
+        <td><button class="btn bts btsm" onclick="expandPDV('${pdv.replace(/'/g,"\\'")}')">Ver detalle</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('pdv-count').textContent=`${filtered.length} PDV`;
+  } else {
+    document.getElementById('pdv-table-title').textContent='Horas por Persona y PDV';
+    thead=`<tr><th>Persona</th><th>Marca</th><th>PDV</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr>`;
+    const filtered=marc.filter(m=>!buscar||m.nombre.toLowerCase().includes(buscar)||m.pdv.toLowerCase().includes(buscar)).sort((a,b)=>a.nombre>b.nombre?1:a.nombre<b.nombre?-1:a.fecha>b.fecha?1:-1);
+    rows=filtered.map((m,i)=>`<tr style="${i%2===0?'':'background:var(--sf2)'}">
+      <td style="font-weight:600">${m.nombre}</td>
+      <td><span class="pill pdk" style="font-size:11px">${m.marca}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.pdv}</td>
+      <td class="mono">${m.fecha}</td><td class="mono">${m.entrada||'—'}</td><td class="mono">${m.salida||'—'}</td>
+      <td class="mono" style="font-weight:600;color:${m.duracion?'var(--gn)':'var(--tx2)'}">${m.duracion||'—'}</td>
+    </tr>`).join('');
+    document.getElementById('pdv-count').textContent=`${filtered.length} registros`;
+  }
+  document.getElementById('pdv-thead').innerHTML=thead;
+  document.getElementById('pdv-tbody').innerHTML=rows||'<tr><td colspan="7" class="empty">Sin datos</td></tr>';
+}
+
+function expandPDV(pdv){
+  const fechas=getSelDates('mdd-pdv');
+  const marca=document.getElementById('f-marca-pdv').value;
+  const marc=filtrar({fechas,marca}).filter(m=>m.pdv===pdv);
+  const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
+  const byP={};
+  marc.forEach(m=>{if(!byP[m.ci])byP[m.ci]={nombre:m.nombre,marca:m.marca,visitas:[],mins:0};byP[m.ci].visitas.push(m);byP[m.ci].mins+=dToM(m.duracion);});
+  document.getElementById('ptitle').textContent=pdv;
+  document.getElementById('psub').textContent=`${marc.length} visitas · ${mToH(mins)} totales`;
+  document.getElementById('pbody').innerHTML=`
+    <div class="ps"><div class="pst">Resumen</div>
+      <div class="ir" style="margin-bottom:14px">
+        <div class="ii"><label>Total visitas</label><span>${marc.length}</span></div>
+        <div class="ii"><label>Horas totales</label><span style="color:var(--gn);font-weight:700">${mins>0?mToH(mins):'—'}</span></div>
+        <div class="ii"><label>Personas</label><span>${Object.keys(byP).length}</span></div>
+        <div class="ii"><label>Promedio/visita</label><span>${marc.length>0?mToH(Math.round(mins/marc.length)):'—'}</span></div>
+      </div>
+    </div>
+    <div class="ps"><div class="pst">Por persona</div>
+      ${Object.values(byP).sort((a,b)=>b.mins-a.mins).map(p=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)">
+          <div style="width:34px;height:34px;border-radius:50%;background:var(--sb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${inits(p.nombre)}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${p.nombre}</div><div style="font-size:11px;color:var(--tx2)">${p.marca} · ${p.visitas.length} visita${p.visitas.length!==1?'s':''}</div></div>
+          <div style="text-align:right"><div style="font-size:14px;font-weight:700;color:var(--gn)">${p.mins>0?mToH(p.mins):'—'}</div><div style="font-size:11px;color:var(--tx2)">${p.visitas.length>0?mToH(Math.round(p.mins/p.visitas.length))+' prom.':''}</div></div>
+        </div>`).join('')}
+    </div>
+    <div class="ps"><div class="pst">Detalle de visitas</div>
+      ${marc.sort((a,b)=>a.fecha>b.fecha?1:-1).map((v,i)=>`
+        <div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;${i%2===0?'':'background:var(--sf2)'}">
+          <span style="min-width:80px;color:var(--tx2)">${v.fecha}</span>
+          <span style="flex:1;font-weight:500">${v.nombre}</span>
+          <span class="mono">${v.entrada||'—'}</span><span class="mono">${v.salida||'—'}</span>
+          <span style="font-weight:700;color:var(--gn);min-width:50px;text-align:right">${v.duracion||'—'}</span>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('pfoot').style.display='none';
+  openPanel();
+}
+
+function exportarPDV(){
+  const fechas=getSelDates('mdd-pdv');
+  const marca=document.getElementById('f-marca-pdv').value;
+  const marc=filtrar({fechas,marca});
+  const sep=';';
+  let csv=['Nombre','Marca','PDV','Fecha','Entrada','Salida','Duración (min)','Duración'].join(sep)+'\n';
+  marc.forEach(m=>csv+=[m.nombre,m.marca,m.pdv,m.fecha,m.entrada||'',m.salida||'',dToM(m.duracion),m.duracion||''].join(sep)+'\n');
+  csv+='\n\nRESUMEN POR PDV\n'+['PDV','Visitas','Horas totales','Personas'].join(sep)+'\n';
+  const byPDV={};
+  marc.forEach(m=>{if(!byPDV[m.pdv])byPDV[m.pdv]={v:0,mins:0,p:new Set()};byPDV[m.pdv].v++;byPDV[m.pdv].mins+=dToM(m.duracion);byPDV[m.pdv].p.add(m.ci);});
+  Object.entries(byPDV).sort((a,b)=>b[1].mins-a[1].mins).forEach(([pdv,d])=>csv+=[pdv,d.v,mToH(d.mins),d.p.size].join(sep)+'\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`reporte_pdv_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// JORNADAS — lógica completa adaptada de retail_horas
+// ══════════════════════════════════════════════════════════════════════
+const UMBRAL_EXTRA_MIN=8*60+30; // 510 min
+const DESC_ALM=60;
+const MAX_SEM=48;
+const MAX_DIA=8;
+const MES_ES={ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11};
+const MES_EN={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+const MES_ALL={...MES_ES,...MES_EN};
+const MES_S=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DIA_S=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+let JDATA=[];
+
+function hFmt(m){if(!m||m<=0)return'0h 00min';const h=Math.floor(m/60),mn=Math.round(m%60);return h+'h '+String(mn).padStart(2,'0')+'min';}
+function hFmtC(m){if(!m||m<=0)return'0h';const h=Math.floor(m/60),mn=Math.round(m%60);return mn>0?h+'h '+mn+'m':h+'h';}
+function hhmm(d){return d?d.toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'}):''}
+
+function pDateJ(v){
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v)?null:v;
+  const s=v.toString().trim();
+  const m=s.match(/^(\d{1,2})-([a-z]+)-(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/i);
+  if(m){const mes=MES_ALL[m[2].toLowerCase().slice(0,3)];return mes!==undefined?new Date(+m[3],mes,+m[1],+m[4],+m[5],+m[6]):null;}
+  // Try HH:MM format from our system
+  const hm=s.match(/^(\d{2}):(\d{2})$/);
+  if(hm)return null; // pure time, not datetime
+  const d=new Date(v);return isNaN(d)?null:d;
+}
+function sameDayJ(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+function fKeyJ(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function semKeyJ(d){
+  const t=new Date(d);t.setHours(0,0,0,0);
+  t.setDate(t.getDate()+3-(t.getDay()+6)%7);
+  const w1=new Date(t.getFullYear(),0,4);
+  const wn=1+Math.round(((t-w1)/86400000-(3-(w1.getDay()+6)%7))/7);
+  return t.getFullYear()+'·S'+String(wn).padStart(2,'0');
+}
+
+// Convert our marcaciones data to jornadas rows format
+function marcacionesToRows(){
+  return S.marcaciones.map(m=>{
+    // Parse entrada as datetime using fecha + hora
+    const [d,mo,y]=m.fecha.split('/');
+    const [eh,em]=m.entrada?m.entrada.split(':'):[null,null];
+    const [sh,sm]=m.salida?m.salida.split(':'):[null,null];
+    if(!eh||!d) return null;
+    const ent=new Date(+y,+mo-1,+d,+eh,+em,0);
+    const sal=sh?new Date(+y,+mo-1,+d,+sh,+sm,0):null;
+    return{
+      nombre:m.nombre, cedula:m.ci, suc:m.pdv,
+      ent, sal
+    };
+  }).filter(Boolean);
+}
+
+function buildJornadas(rows){
+  const emps={};
+  for(const r of rows){
+    if(!r.ent)continue;
+    const ek=r.cedula||r.nombre;
+    if(!emps[ek])emps[ek]={nombre:r.nombre,cedula:r.cedula,dias:{}};
+    const dk=fKeyJ(r.ent);
+    if(!emps[ek].dias[dk])emps[ek].dias[dk]=[];
+    const tipo=!r.sal?'sin_salida':!sameDayJ(r.ent,r.sal)?'autocomp':'valida';
+    emps[ek].dias[dk].push({...r,tipo});
+  }
+  const result=[];
+  for(const[ek,ed]of Object.entries(emps)){
+    const diasArr=Object.keys(ed.dias).sort().map(dk=>{
+      const fr=ed.dias[dk];
+      const validas=fr.filter(f=>f.tipo==='valida');
+      let ampm=false;
+      if(validas.length>=2){
+        const sv=[...validas].sort((a,b)=>a.ent-b.ent);
+        for(let i=1;i<sv.length;i++){if((sv[i].ent-sv[i-1].sal)/60000>=20){ampm=true;break;}}
+      }
+      const minBrutos=validas.reduce((s,f)=>s+(f.sal-f.ent)/60000,0);
+      const desc=(minBrutos===0||ampm)?0:DESC_ALM;
+      const minEfec=Math.max(0,minBrutos-desc);
+      const hExtraMin=minEfec>UMBRAL_EXTRA_MIN?Math.max(0,minEfec-8*60):0;
+      const hasSin=fr.some(f=>f.tipo==='sin_salida');
+      const hasAuto=fr.some(f=>f.tipo==='autocomp');
+      const esSinSalida=validas.length===0;
+      return{dk,fecha:new Date(dk+'T12:00:00'),fr,validas,ampm,minBrutos,desc,minEfec,hEfec:minEfec/60,hExtraMin,hasSin,hasAuto,esSinSalida,sk:semKeyJ(new Date(dk+'T12:00:00'))};
+    });
+    const semsMap={};
+    for(const d of diasArr){
+      if(!semsMap[d.sk])semsMap[d.sk]={sk:d.sk,dias:[],minTotal:0,hExtraMin:0,diasTrab:0,diasSinSal:0};
+      semsMap[d.sk].dias.push(d);
+      semsMap[d.sk].minTotal+=d.minEfec;
+      semsMap[d.sk].hExtraMin+=d.hExtraMin;
+      if(d.fecha.getDay()!==0)semsMap[d.sk].diasTrab++;
+      if(d.esSinSalida)semsMap[d.sk].diasSinSal++;
+    }
+    for(const sem of Object.values(semsMap)){let ac=0;for(const d of sem.dias){ac+=d.minEfec;d.acumSem=ac;}}
+    result.push({ek,nombre:ed.nombre,cedula:ed.cedula,semanas:Object.values(semsMap).sort((a,b)=>a.sk.localeCompare(b.sk))});
+  }
+  return result;
+}
+
+function cargarJornadasDesdeAPI(){
+  if(!S.marcaciones.length){alert('Primero conectá tu Google Sheets');return;}
+  const rows=marcacionesToRows();
+  JDATA=buildJornadas(rows);
+  poblarJornadas();
+  renderJornadas();
+}
+
+function handleJornadasFile(input){
+  const file=input.files[0]; if(!file)return;
+  // Load SheetJS if not available
+  const doLoad=()=>{
+    const r=new FileReader();
+    if(file.name.toLowerCase().endsWith('.csv')){
+      r.onload=e=>{const rows=parseJCSV(e.target.result);JDATA=buildJornadas(rows);poblarJornadas();renderJornadas();};
+      r.readAsText(file,'UTF-8');
+    }else{
+      r.onload=e=>{const rows=parseJXLSX(new Uint8Array(e.target.result));JDATA=buildJornadas(rows);poblarJornadas();renderJornadas();};
+      r.readAsArrayBuffer(file);
+    }
+  };
+  if(!window.XLSX){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=doLoad; document.head.appendChild(s);
+  } else doLoad();
+}
+
+function detectJCols(hdr){
+  const find=(exact,partial,exclude=[])=>{let i=hdr.findIndex(c=>c===exact);if(i>=0)return i;i=hdr.findIndex(c=>c.includes(partial)&&!exclude.some(ex=>c.includes(ex)));return i;};
+  return{iN:find('nombre y apellido','nombre',[]),iC:find('cedula','ced',['suc']),iS:find('sucursal','suc',[]),iE:find('entrada','entr',[]),iSa:find('salida','sal',['suc','sucursal'])};
+}
+function parseJCSV(txt){
+  const L=txt.split(/\r?\n/).filter(l=>l.trim());
+  const hdr=L[0].split(',').map(x=>x.trim().toLowerCase().replace(/[^a-z0-9 ]/g,''));
+  const{iN,iC,iS,iE,iSa}=detectJCols(hdr);
+  return L.slice(1).filter(l=>l.trim()).map(l=>{const c=l.split(',');return{nombre:(c[iN]||'').trim(),cedula:(c[iC]||'').trim(),suc:(c[iS]||'').trim(),ent:pDateJ(c[iE]),sal:c[iSa]&&c[iSa].trim()?pDateJ(c[iSa]):null};}).filter(r=>r.ent);
+}
+function parseJXLSX(buf){
+  const wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const all=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,cellDates:true,dateNF:'dd-mmm-yyyy hh:mm:ss'});
+  if(!all.length)return[];
+  const hdr=(all[0]||[]).map(x=>String(x||'').trim().toLowerCase().replace(/[^a-z0-9 ]/g,''));
+  const{iN,iC,iS,iE,iSa}=detectJCols(hdr);
+  return all.slice(1).filter(c=>c&&c[iE]).map(c=>({nombre:String(c[iN]||'').trim(),cedula:String(c[iC]||'').trim(),suc:String(c[iS]||'').trim(),ent:pDateJ(c[iE]),sal:c[iSa]?pDateJ(c[iSa]):null})).filter(r=>r.ent);
+}
+
+function poblarJornadas(){
+  const se=document.getElementById('j-emp');
+  const ss=document.getElementById('j-sem');
+  se.innerHTML=(JDATA.length>1?'<option value="">Todos los empleados</option>':'')+JDATA.map(e=>`<option value="${e.ek}">${e.nombre}</option>`).join('');
+  if(JDATA.length===1)se.value=JDATA[0].ek;
+  const sems=[...new Set(JDATA.flatMap(e=>e.semanas.map(s=>s.sk)))].sort();
+  ss.innerHTML='<option value="">Todas las semanas</option>'+sems.map(s=>`<option value="${s}">${s}</option>`).join('');
+  [se,ss].forEach(el=>el.style.display='block');
+  document.getElementById('j-dl').style.display='block';
+  // KPIs
+  const allDias=JDATA.flatMap(e=>e.semanas.flatMap(s=>s.dias));
+  const diasOk=allDias.filter(d=>d.minEfec>0).length;
+  const diasSin=allDias.filter(d=>(d.hasSin||d.hasAuto)&&d.minEfec===0).length;
+  const totExt=JDATA.flatMap(e=>e.semanas).reduce((s,sem)=>s+sem.hExtraMin,0);
+  const totHrs=JDATA.flatMap(e=>e.semanas).reduce((s,sem)=>s+sem.minTotal,0);
+  document.getElementById('j-kpis').innerHTML=`
+    <div class="sc2"><div class="slbl">Empleados</div><div class="sval">${JDATA.length}</div><div class="ssub">${sems.length} semana(s)</div></div>
+    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${hFmtC(totHrs)}</div><div class="ssub">efectivas calculadas</div></div>
+    <div class="sc2" style="border-color:#8b5cf644"><div class="slbl">Horas extra</div><div class="sval" style="color:#8b5cf6">${hFmtC(totExt)}</div><div class="ssub">sobre 8h por día</div></div>
+    <div class="sc2" style="border-color:#e8404a44"><div class="slbl">Días sin salida</div><div class="sval" style="color:var(--rd)">${diasSin}</div><div class="ssub">sin salida válida</div></div>`;
+  document.getElementById('j-kpis').style.display='grid';
+}
+
+function renderJornadas(){
+  const selE=document.getElementById('j-emp').value;
+  const selS=document.getElementById('j-sem').value;
+  const emps=selE?JDATA.filter(e=>e.ek===selE):JDATA;
+  let cardsHTML='', alertas=[];
+
+  for(const emp of emps){
+    const sems=selS?emp.semanas.filter(s=>s.sk===selS):emp.semanas;
+    for(const sem of sems){
+      const hTot=sem.minTotal/60;
+      const hFalt=Math.max(0,MAX_SEM-hTot);
+      const hSobr=Math.max(0,hTot-MAX_SEM);
+      const pct=Math.min(100,Math.round(hTot/MAX_SEM*100));
+      const barColor=hTot>=MAX_SEM?'var(--gn)':hTot>=MAX_SEM*.75?'var(--yw)':'var(--bl)';
+      const metaColor=hTot>=MAX_SEM?'var(--gn)':hTot>=MAX_SEM*.75?'var(--yw)':'var(--rd)';
+      const metaTxt=hTot>=MAX_SEM?(hSobr>0?`+${hFmtC(hSobr*60)} sobre las 48h`:'✓ Meta cumplida'):`Faltan ${hFmtC(hFalt*60)} para las 48h`;
+      const diasSin=sem.dias.filter(d=>(d.hasSin||d.hasAuto)&&d.minEfec===0);
+      const diasExt=sem.dias.filter(d=>d.hExtraMin>0);
+
+      cardsHTML+=`
+        <div class="jor-card">
+          <div class="jor-head">
+            <div><div class="jor-nombre">${emp.nombre}</div><div class="jor-ci">CI ${emp.cedula}</div></div>
+            <div class="jor-sem-badge">${sem.sk}</div>
+          </div>
+          <div class="jor-bar-wrap">
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span class="jor-horas" style="color:${metaColor}">${hFmt(sem.minTotal)}</span>
+              <span style="font-size:12px;color:var(--tx2)">/ ${MAX_SEM}h</span>
+            </div>
+            <div class="jor-bar-bg"><div class="jor-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+            <div class="jor-meta" style="color:${metaColor};margin-top:4px">${metaTxt}</div>
+          </div>
+          <div class="jor-stats">
+            <div class="jor-stat"><div class="jor-stat-v" style="color:var(--bl)">${sem.diasTrab}</div><div class="jor-stat-l">Días</div></div>
+            <div class="jor-stat"><div class="jor-stat-v" style="color:#8b5cf6">${hFmtC(sem.hExtraMin)}</div><div class="jor-stat-l">Extra</div></div>
+            <div class="jor-stat"><div class="jor-stat-v" style="color:${sem.diasSinSal>0?'var(--rd)':'var(--gn)'}">${sem.diasSinSal}</div><div class="jor-stat-l">Sin salida</div></div>
+          </div>
+          ${diasExt.length>0?`<div class="jor-chips">${diasExt.map(d=>`<span class="jor-chip jor-chip-ext">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} +${hFmtC(d.hExtraMin)}</span>`).join('')}</div>`:''}
+          ${diasSin.length>0?`<div class="jor-chips">${diasSin.map(d=>`<span class="jor-chip jor-chip-sin">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} sin salida</span>`).join('')}</div>`:''}
+          <table class="jor-detail-tbl" style="margin-top:14px">
+            <thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Acum.</th><th>Estado</th></tr></thead>
+            <tbody>
+              ${sem.dias.map(d=>{
+                const badge=((d.hasSin||d.hasAuto)&&d.minEfec===0)?`<span class="pill pr" style="font-size:10px">Sin salida</span>`:d.hExtraMin>0?`<span class="pill ppu" style="font-size:10px">+${hFmtC(d.hExtraMin)}</span>`:d.hEfec>=MAX_DIA?`<span class="pill pg" style="font-size:10px">Completo</span>`:d.hEfec>0?`<span class="pill py" style="font-size:10px">Parcial</span>`:`<span class="pill pgr" style="font-size:10px">Sin horas</span>`;
+                const firstV=d.validas[0];
+                return`<tr>
+                  <td>${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} ${DIA_S[d.fecha.getDay()]}</td>
+                  <td class="mono">${firstV?hhmm(firstV.ent):'—'}</td>
+                  <td class="mono">${firstV&&firstV.sal?hhmm(firstV.sal):`<span style="color:var(--rd)">⚠️</span>`}</td>
+                  <td style="font-weight:600;color:${d.minEfec>0?'var(--gn)':'var(--rd)'}">${d.minEfec>0?hFmt(d.minEfec):'—'}</td>
+                  <td class="mono">${hFmtC(d.acumSem)}</td>
+                  <td>${badge}</td>
+                </tr>`;
+              }).join('')}
+              <tr class="jor-tot-row"><td colspan="3">TOTAL ${sem.sk}</td><td style="color:${metaColor}">${hFmt(sem.minTotal)}</td><td>${pct}%</td><td style="color:${metaColor}">${metaTxt}</td></tr>
+            </tbody>
+          </table>
+        </div>`;
+
+      // Build alerts
+      for(const d of sem.dias){
+        const fStr=d.fecha.getDate()+'-'+MES_S[d.fecha.getMonth()];
+        if((d.hasSin||d.hasAuto)&&d.minEfec===0) alertas.push({tipo:'er',txt:`<strong>${emp.nombre}</strong> — ${fStr} (${DIA_S[d.fecha.getDay()]})<div class="al-date">${d.hasAuto?'Salida auto-completada (otra fecha)':'Sin salida registrada'}</div>`});
+        if(d.hExtraMin>0) alertas.push({tipo:'pu',txt:`<strong>${emp.nombre}</strong> — ${fStr}: <strong>${hFmt(d.minEfec)}</strong> efectivas (+${hFmtC(d.hExtraMin)} extra)<div class="al-date">Semana ${sem.sk}</div>`});
+        if(d.hEfec>0&&d.hEfec<MAX_DIA&&!d.hasSin&&!d.hasAuto) alertas.push({tipo:'wa',txt:`<strong>${emp.nombre}</strong> — ${fStr}: jornada de <strong>${hFmt(d.minEfec)}</strong> (menor a 8h)<div class="al-date">Semana ${sem.sk}</div>`});
+      }
+      if(hTot<MAX_SEM) alertas.push({tipo:'in',txt:`<strong>${emp.nombre}</strong> — Semana ${sem.sk}: <strong>${hFmt(sem.minTotal)} / ${MAX_SEM}h</strong><div class="al-date">Faltan ${hFmtC(hFalt*60)} para completar las 48h</div>`});
+    }
+  }
+
+  const dotMap={er:'al-dot-er',pu:'al-dot-pu',wa:'al-dot-wa',in:'al-dot-in'};
+  const alertHTML=alertas.map(a=>`<div class="al-item"><div class="al-dot ${dotMap[a.tipo]||'al-dot-in'}"></div><div class="al-body">${a.txt}</div></div>`).join('');
+
+  document.getElementById('j-content').innerHTML=`
+    <div class="jor-grid">${cardsHTML||'<div class="empty">Sin datos para el filtro seleccionado</div>'}</div>
+    <div class="al-panel">
+      <div class="al-head">
+        <h3>Registro de alertas</h3>
+        <span class="al-badge ${alertas.length>0?'red':'ok'}">${alertas.length} alerta${alertas.length!==1?'s':''}</span>
+      </div>
+      <div class="al-list">${alertHTML||'<div class="al-item"><div class="al-dot al-dot-in"></div><div class="al-body">Sin alertas para el filtro seleccionado.</div></div>'}</div>
+    </div>`;
+
+  // Update alert banner in resumen
+  updateResumenAlertBanner(alertas);
+}
+
+function updateResumenAlertBanner(alertas){
+  // Show alert count in resumen view
+  const b=document.getElementById('j-alert-banner');
+  if(!b)return;
+  const errs=alertas.filter(a=>a.tipo==='er').length;
+  const exts=alertas.filter(a=>a.tipo==='pu').length;
+  if(errs>0||exts>0){
+    b.style.display='block';
+    b.innerHTML=`⚠️ ${errs>0?`${errs} día${errs!==1?'s':''} sin salida válida`:''}${errs>0&&exts>0?' · ':''}${exts>0?`${exts} jornada${exts!==1?'s':''} con horas extra`:''} — <span style="cursor:pointer;text-decoration:underline" onclick="showView('jornadas')">Ver en Jornadas</span>`;
+  } else {
+    b.style.display='none';
+  }
+}
+
+function exportJornadasExcel(){
+  if(!window.XLSX){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=()=>_doExportJornadas(); document.head.appendChild(s);
+  } else _doExportJornadas();
+}
+
+function _doExportJornadas(){
+  const wb=XLSX.utils.book_new();
+  const rows=[['Empleado','CI','Semana','Fecha','Dia','Entrada','Salida','Estado','Sucursal/PDV','H. brutas','Desc. almuerzo','H. efectivas','H. extra (>8h)','Acum. semana','Faltan 48h','Estado dia']];
+  for(const emp of JDATA){
+    for(const sem of emp.semanas){
+      for(const d of sem.dias){
+        const firstV=d.validas[0];
+        rows.push([
+          emp.nombre, emp.cedula, sem.sk, d.dk, DIA_S[d.fecha.getDay()],
+          firstV?hhmm(firstV.ent):'', firstV&&firstV.sal?hhmm(firstV.sal):'',
+          d.hasSin?'Sin salida':d.hasAuto?'Auto-completado':'Válida',
+          firstV?firstV.suc||'':'',
+          +(d.minBrutos/60).toFixed(2), -(d.desc/60).toFixed(2),
+          +(d.minEfec/60).toFixed(2), +(d.hExtraMin/60).toFixed(2),
+          +(d.acumSem/60).toFixed(2), +Math.max(0,MAX_SEM-d.acumSem/60).toFixed(2),
+          (d.hasSin||d.hasAuto)&&d.minEfec===0?'SIN SALIDA':d.hExtraMin>0?'SUPERA 8H':d.hEfec>=MAX_DIA?'COMPLETO':d.hEfec>0?'PARCIAL':'SIN HORAS'
+        ]);
+      }
+      const hT=sem.minTotal/60;
+      rows.push(['','',`TOTAL ${sem.sk}`,'','','','','','','','',+hT.toFixed(2),+(sem.hExtraMin/60).toFixed(2),+hT.toFixed(2),+Math.max(0,MAX_SEM-hT).toFixed(2),hT>=MAX_SEM?'CUMPLIDO':'INCOMPLETO']);
+      rows.push([]);
+    }
+  }
+  const ws1=XLSX.utils.aoa_to_sheet(rows);
+  ws1['!cols']=[26,12,10,12,6,8,8,16,26,10,12,12,12,12,10,14].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws1,'Marcaciones');
+  const rows2=[['Empleado','CI','Semana','Días Lun-Sab','H. efectivas','Meta (48h)','H. extra >8h','Faltan 48h','Estado']];
+  for(const emp of JDATA){for(const sem of emp.semanas){const hT=sem.minTotal/60;rows2.push([emp.nombre,emp.cedula,sem.sk,sem.diasTrab,+hT.toFixed(2),MAX_SEM,+(sem.hExtraMin/60).toFixed(2),+Math.max(0,MAX_SEM-hT).toFixed(2),hT>=MAX_SEM?'CUMPLIDO':'INCOMPLETO']);}}
+  const ws2=XLSX.utils.aoa_to_sheet(rows2);
+  ws2['!cols']=[26,12,10,14,14,10,14,12,12].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws2,'Resumen Semanal');
+  XLSX.writeFile(wb,'jornadas_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
 
 // ── THEME ─────────────────────────────────────────────────────────────
 function toggleTheme(){
