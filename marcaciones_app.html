@@ -337,6 +337,9 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       <div class="ni" id="nav-jornadas" onclick="showView('jornadas')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Análisis de Jornadas
       </div>
+      <div class="ni" id="nav-ausencias" onclick="showView('ausencias')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>Ausencias
+      </div>
       <div class="nsl" style="margin-top:14px">Personas</div>
       <div id="sbpersons"></div>
     </div>
@@ -361,6 +364,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
         <button class="ttab" id="tab-productividad" onclick="showView('productividad')">Productividad</button>
         <button class="ttab" id="tab-pdv" onclick="showView('pdv')">Reporte PDV</button>
         <button class="ttab" id="tab-jornadas" onclick="showView('jornadas')">Jornadas</button>
+        <button class="ttab" id="tab-ausencias" onclick="showView('ausencias')">Ausencias</button>
       </div>
       <div class="tright">
         <div class="spill"><div class="rdot" id="rd2"></div><span id="rl2">—</span></div>
@@ -528,6 +532,44 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       </div>
     </div>
 
+    <!-- AUSENCIAS -->
+    <div id="view-ausencias" class="content" style="display:none">
+      <div class="ph"><h1>Reporte de Ausencias</h1><p>Personas que no marcaron en el período seleccionado, con sus categorías y observaciones</p></div>
+      <div class="filters">
+        <div class="multi-date-wrap">
+          <div class="multi-date-btn" id="mdb-aus" onclick="toggleMDD('mdd-aus')">
+            📅 <span id="mdb-aus-label">Seleccioná fechas</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="multi-date-dropdown" id="mdd-aus">
+            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-aus')"><input type="checkbox" id="mdd-aus-all"> Todas las fechas</div>
+            <div id="mdd-aus-items"></div>
+          </div>
+        </div>
+        <select class="fsel" id="f-marca-aus" onchange="renderAusencias()"><option value="">Todas las marcas</option></select>
+        <select class="fsel" id="f-cat-aus" onchange="renderAusencias()">
+          <option value="">Todas las categorías</option>
+          <option value="sin_categoria">Sin categoría (no justificadas)</option>
+          <option value="justificadas">Justificadas</option>
+        </select>
+        <button class="btn bts btsm" onclick="exportarAusencias()">↓ Excel ausencias</button>
+      </div>
+      <div class="sg" style="grid-template-columns:repeat(4,1fr)" id="aus-stats"></div>
+      <div class="tc" style="margin-top:16px">
+        <div class="tch">
+          <span class="tct" id="aus-table-title">Ausencias del período</span>
+          <span class="tcc" id="aus-count"></span>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Fecha</th><th>CI</th><th>Nombre y Apellido</th><th>Marca</th>
+            <th>Categoría</th><th>Observación</th><th></th>
+          </tr></thead>
+          <tbody id="aus-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 </div>
@@ -679,7 +721,7 @@ async function cargarDatosAPI(){
 
 async function recargarDatos(){
   if(!S.sheetId)return;
-  try{await cargarDatosAPI();poblarFiltros();renderAll();renderSBP();}catch(e){}
+  try{await cargarDatosAPI();poblarFiltros(true);renderAll();renderSBP();}catch(e){}
 }
 function cargarDemo(){
   S.diasEsperados=parseInt(document.getElementById('diasEsperados').value)||22;
@@ -825,7 +867,7 @@ function poblarFiltros(){
   const personas=[...new Set(S.marcaciones.map(m=>m.nombre))].sort();
 
   // Populate multi-date dropdowns
-  ['res','asist','marc','prod','pdv'].forEach(prefix=>{
+  ['res','asist','marc','prod','pdv','aus'].forEach(prefix=>{
     const cont=document.getElementById(`mdd-${prefix}-items`);if(!cont)return;
     const isAsist=prefix==='asist';
     cont.innerHTML=fechas.map(f=>`
@@ -838,7 +880,7 @@ function poblarFiltros(){
   });
 
   // Marca selects
-  ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','f-marca-pdv','exp-marca'].forEach(id=>{
+  ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','f-marca-pdv','f-marca-aus','exp-marca'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const old=el.value;
     el.innerHTML=id==='exp-marca'?'<option value="">Todas</option>':'<option value="">Todas las marcas</option>';
@@ -1302,13 +1344,14 @@ function closePanel(){document.getElementById('panel').classList.remove('open');
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function showView(v){
-  ['resumen','asistencia','marcaciones','productividad','pdv','jornadas'].forEach(n=>{
+  ['resumen','asistencia','marcaciones','productividad','pdv','jornadas','ausencias'].forEach(n=>{
     document.getElementById(`view-${n}`).style.display=n===v?'block':'none';
     document.getElementById(`nav-${n}`)?.classList.toggle('active',n===v);
     document.getElementById(`tab-${n}`)?.classList.toggle('active',n===v);
   });
   if(v==='asistencia')renderAsistencia();
   if(v==='pdv')renderPDV();
+  if(v==='ausencias')renderAusencias();
 }
 
 // ── EXPORT CSV ────────────────────────────────────────────────────────
@@ -1958,6 +2001,115 @@ function _doExportJornadas(){
   XLSX.writeFile(wb,'jornadas_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+
+// ── AUSENCIAS ─────────────────────────────────────────────────────────
+function renderAusencias(){
+  const fechas=getSelDates('mdd-aus');
+  const marca=document.getElementById('f-marca-aus').value;
+  const catFiltro=document.getElementById('f-cat-aus').value;
+
+  if(!fechas||fechas.length===0){
+    document.getElementById('aus-tbody').innerHTML='<tr><td colspan="7" class="empty">Seleccioná al menos una fecha para ver las ausencias</td></tr>';
+    document.getElementById('aus-stats').innerHTML='';
+    document.getElementById('aus-count').textContent='';
+    return;
+  }
+
+  // For each person x date — check if they have a marcacion
+  const marcSet=new Set(S.marcaciones.map(m=>`${m.ci}_${m.fecha}`));
+  const persons=S.personas.filter(p=>!marca||p.marca===marca);
+
+  const ausencias=[];
+  fechas.forEach(f=>{
+    persons.forEach(p=>{
+      if(!marcSet.has(`${p.ci}_${f}`)){
+        const obs=getDO(p.ci,f);
+        ausencias.push({fecha:f,ci:p.ci,nombre:p.nombre,marca:p.marca,cat:obs.cat||'',obs:obs.txt||obs.texto||''});
+      }
+    });
+  });
+
+  // Apply category filter
+  const filtered=ausencias.filter(a=>{
+    if(catFiltro==='sin_categoria') return !a.cat;
+    if(catFiltro==='justificadas') return !!a.cat&&!restaProd(a.cat);
+    return true;
+  });
+
+  // Sort by fecha then nombre
+  filtered.sort((a,b)=>a.fecha>b.fecha?1:a.fecha<b.fecha?-1:a.nombre.localeCompare(b.nombre));
+
+  // Stats
+  const total=filtered.length;
+  const justificadas=filtered.filter(a=>a.cat&&!restaProd(a.cat)).length;
+  const sinCat=filtered.filter(a=>!a.cat).length;
+  const personas=new Set(filtered.map(a=>a.ci)).size;
+
+  document.getElementById('aus-stats').innerHTML=`
+    <div class="sc2" style="border-color:#e8404a44"><div class="slbl">Total ausencias</div><div class="sval" style="color:var(--rd)">${total}</div><div class="ssub">${fechas.length} fecha(s) · ${persons.length} personas</div></div>
+    <div class="sc2"><div class="slbl">Sin categoría</div><div class="sval">${sinCat}</div><div class="ssub">no justificadas</div></div>
+    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Justificadas</div><div class="sval" style="color:var(--gn)">${justificadas}</div><div class="ssub">reposo, libre, etc.</div></div>
+    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Personas ausentes</div><div class="sval" style="color:var(--bl)">${personas}</div><div class="ssub">personas distintas</div></div>`;
+
+  const rows=filtered.map((a,i)=>`<tr style="${i%2===0?'':'background:var(--sf2)'}">
+    <td class="mono">${a.fecha}</td>
+    <td class="mono">${a.ci}</td>
+    <td style="font-weight:600">${a.nombre}</td>
+    <td><span class="pill pdk" style="font-size:11px">${a.marca}</span></td>
+    <td>${a.cat?catPill(a.cat):'<span class="pill pr" style="font-size:11px">❌ Sin categoría</span>'}</td>
+    <td style="font-size:12px;color:var(--tx2)">${a.obs||'—'}</td>
+    <td><button class="btn bts btsm" onclick="openObsDia('${a.ci}','${a.nombre.replace(/'/g,"\\'")}','${a.marca}','${fechas.join(',')}')">+ Obs</button></td>
+  </tr>`).join('');
+
+  document.getElementById('aus-tbody').innerHTML=rows||'<tr><td colspan="7" class="empty">No hay ausencias para los filtros seleccionados 🎉</td></tr>';
+  document.getElementById('aus-count').textContent=`${total} ausencias`;
+  document.getElementById('aus-table-title').textContent=`Ausencias${fechas.length===1?' del '+fechas[0]:' del período ('+fechas.length+' fechas)'}`;
+}
+
+function exportarAusencias(){
+  const fechas=getSelDates('mdd-aus')||[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const marca=document.getElementById('f-marca-aus')?.value||'';
+  const marcSet=new Set(S.marcaciones.map(m=>`${m.ci}_${m.fecha}`));
+  const persons=S.personas.filter(p=>!marca||p.marca===marca);
+
+  const ausencias=[];
+  fechas.forEach(f=>{
+    persons.forEach(p=>{
+      if(!marcSet.has(`${p.ci}_${f}`)){
+        const obs=getDO(p.ci,f);
+        ausencias.push({fecha:f,ci:p.ci,nombre:p.nombre,marca:p.marca,cat:obs.cat||'',obs:obs.txt||obs.texto||''});
+      }
+    });
+  });
+  ausencias.sort((a,b)=>a.fecha>b.fecha?1:a.fecha<b.fecha?-1:a.nombre.localeCompare(b.nombre));
+
+  const sep=';';
+  let csv=['Fecha','CI','Nombre y Apellido','Marca','Categoría','Observación','Resta productividad'].join(sep)+'\n';
+  ausencias.forEach(a=>{
+    csv+=[a.fecha,a.ci,a.nombre,a.marca,a.cat||'Sin categoría',(a.obs||'').replace(/;/g,','),restaProd(a.cat)?'Sí':'No'].join(sep)+'\n';
+  });
+
+  // Summary by persona
+  csv+='\n\nRESUMEN POR PERSONA\n';
+  csv+=['CI','Nombre','Marca','Total ausencias','Justificadas','Sin categoría'].join(sep)+'\n';
+  const byPerson={};
+  ausencias.forEach(a=>{
+    if(!byPerson[a.ci])byPerson[a.ci]={ci:a.ci,nombre:a.nombre,marca:a.marca,total:0,just:0,sinCat:0};
+    byPerson[a.ci].total++;
+    if(a.cat&&!restaProd(a.cat))byPerson[a.ci].just++;
+    if(!a.cat)byPerson[a.ci].sinCat++;
+  });
+  Object.values(byPerson).sort((a,b)=>b.total-a.total).forEach(p=>{
+    csv+=[p.ci,p.nombre,p.marca,p.total,p.just,p.sinCat].join(sep)+'\n';
+  });
+
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`ausencias_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
 // ── THEME ─────────────────────────────────────────────────────────────
 function toggleTheme(){
   const dark=document.body.classList.toggle('dark');
@@ -1987,7 +2139,7 @@ function setAR(){
   upd();_ct=setInterval(()=>{rem--;if(rem<=0)rem=secs;upd();},1000);
   _rt=setInterval(async()=>{
     rem=secs;[d1,d2].forEach(d=>{if(d)d.className='rdot syncing';});if(l1)l1.textContent='Actualizando…';
-    try{await cargarDatosAPI();poblarFiltros();renderAll();renderSBP();}catch(e){}
+    try{await cargarDatosAPI();poblarFiltros(true);renderAll();renderSBP();}catch(e){}
     [d1,d2].forEach(d=>{if(d)d.className='rdot active';});
   },secs*1000);
 }
