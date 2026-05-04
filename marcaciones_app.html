@@ -252,6 +252,22 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
 .jor-chip{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
 .jor-chip-ext{background:#ede9fe;color:#7c3aed;}
 .jor-chip-sin{background:var(--rd-bg);color:var(--rd);}
+.jor-chip-gap{background:#fef3c7;color:#d97706;}
+.jor-chip-corto{background:#dbeafe;color:#2563eb;}
+.jor-chip-fecha{background:#fee2e2;color:#dc2626;}
+
+/* ── OBS PANEL MEJORADO ──────────────────────────── */
+.obs-cat-section{margin-bottom:16px;}
+.obs-cat-title{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.obs-cat-title::after{content:'';flex:1;height:1px;background:var(--bd);}
+.obs-chip-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.obs-chip{padding:8px 14px;border-radius:20px;border:1.5px solid var(--bd);background:var(--sf);font-size:13px;font-weight:500;color:var(--tx2);cursor:pointer;transition:all .12s;user-select:none;display:flex;align-items:center;gap:5px;}
+.obs-chip:hover{border-color:var(--ac);color:var(--ac);}
+.obs-chip.selected-g{background:var(--gn-bg);color:var(--gn);border-color:var(--gn);font-weight:700;}
+.obs-chip.selected-r{background:var(--rd-bg);color:var(--rd);border-color:var(--rd);font-weight:700;}
+.obs-chip.selected-y{background:var(--yw-bg);color:var(--yw);border-color:var(--yw);font-weight:700;}
+.obs-chip.selected-b{background:var(--bl-bg);color:var(--bl);border-color:var(--bl);font-weight:700;}
+.obs-chip.selected-p{background:var(--pu-bg);color:var(--pu);border-color:var(--pu);font-weight:700;}
 .jor-detail-tbl{width:100%;border-collapse:collapse;margin-top:16px;font-size:12px;}
 .jor-detail-tbl th{padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px;background:var(--sf2);border-bottom:1px solid var(--bd);}
 .jor-detail-tbl td{padding:7px 10px;border-bottom:1px solid var(--bd);vertical-align:middle;}
@@ -295,8 +311,8 @@ body.dark .jor-bar-bg{background:var(--sf2);}
     <input id="apiKey" placeholder="AIzaSy..." type="password"/>
     <div class="hint">console.cloud.google.com → APIs → Credentials</div>
   </div>
-  <div class="fld"><label>Días laborales esperados este mes</label>
-    <input id="diasEsperados" type="number" value="22" min="1" max="31"/>
+  <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:10px 13px;font-size:12px;color:var(--tx2);margin-bottom:6px">
+    📅 Los días laborales del mes se calculan automáticamente (lunes a viernes del mes actual).
   </div>
   <button class="bd" onclick="conectar()">Conectar y cargar datos</button>
   <button class="bdemo" onclick="cargarDemo()">▷ Probar con datos de demo</button>
@@ -344,7 +360,10 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       <div id="sbpersons"></div>
     </div>
     <div class="sfooter">
-      <div class="rbar"><label>Auto-actualizar</label>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px">
+      📅 Días hábiles mes actual: <strong style="color:rgba(255,255,255,.7)" id="sb-dias-val">—</strong>
+    </div>
+    <div class="rbar"><label>Auto-actualizar</label>
         <select class="rsel" id="ri" onchange="setAR()">
           <option value="0">Apagado</option><option value="60">1 min</option>
           <option value="120" selected>2 min</option><option value="300">5 min</option><option value="600">10 min</option>
@@ -614,6 +633,20 @@ body.dark .jor-bar-bg{background:var(--sf2);}
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────
 const S={personas:[],marcaciones:[],observaciones:{},diasEsperados:22,sheetId:'',apiKey:''};
+
+function calcDiasHabiles(year,month){
+  const now=new Date();
+  const y=year||now.getFullYear();
+  const m=month!==undefined?month:now.getMonth();
+  let count=0;
+  const d=new Date(y,m,1);
+  while(d.getMonth()===m){
+    const dow=d.getDay();
+    if(dow>=1&&dow<=5)count++;
+    d.setDate(d.getDate()+1);
+  }
+  return count;
+}
 let _pending={};
 
 // ── CATEGORIES ────────────────────────────────────────────────────────
@@ -644,10 +677,8 @@ function catPill(cat){
 function loadSavedCreds(){
   const id=localStorage.getItem('marka_sheet_id');
   const key=localStorage.getItem('marka_api_key');
-  const dias=localStorage.getItem('marka_dias');
   if(id) document.getElementById('sheetId').value=id;
   if(key) document.getElementById('apiKey').value=key;
-  if(dias) document.getElementById('diasEsperados').value=dias;
   return !!(id&&key);
 }
 
@@ -692,7 +723,6 @@ async function conectar(){
   // Save to localStorage
   localStorage.setItem('marka_sheet_id',id);
   localStorage.setItem('marka_api_key',key);
-  localStorage.setItem('marka_dias',dias);
   try{await cargarDatosAPI();iniciarApp();}
   catch(e){alert('Error al conectar: '+e.message+'\n\nVerificá que la planilla sea pública y la API key sea correcta.');}
 }
@@ -724,13 +754,16 @@ async function recargarDatos(){
   try{await cargarDatosAPI();poblarFiltros(true);renderAll();renderSBP();}catch(e){}
 }
 function cargarDemo(){
-  S.diasEsperados=parseInt(document.getElementById('diasEsperados').value)||22;
+  S.diasEsperados=calcDiasHabiles();
   S.personas=DP;S.marcaciones=genDM();iniciarApp();
 }
 function iniciarApp(){
   S.observaciones=JSON.parse(localStorage.getItem('marka_obs')||'{}');
   document.getElementById('setup').style.display='none';
   document.getElementById('app').style.display='block';
+  S.diasEsperados=calcDiasHabiles();
+  const sbDias=document.getElementById('sb-dias-val');
+  if(sbDias) sbDias.textContent=S.diasEsperados+' días';
   applyTheme();poblarFiltros();renderSBP();renderAll();setAR();
   // Close dropdowns on outside click
   document.addEventListener('click',e=>{
@@ -1205,7 +1238,11 @@ function openMarcacion(id){
       </div>
     </div>
     <div class="ps"><div class="pst">Estado</div>
-      <div class="chips" id="chips-m">${CATS.map(c=>`<div class="chip ${obs.cat===c.id?c.cls+' selected':''}" onclick="selChip(${id},'${c.id}',this,'m')">${c.label}</div>`).join('')}</div>
+      <div id="chips-m">
+        ${[['Presencia',['presente','ausente','libre']],['Licencias médicas',['reposo','maternidad','paternidad','duelo']],['Otras',['vacaciones','capacitacion','justificado','suspendido','renuncia']]].map(([g,ids])=>
+          `<div class="obs-cat-section"><div class="obs-cat-title">${g}</div><div class="obs-chip-grid">${ids.map(cid=>{const c=getCat(cid);return`<div class="obs-chip ${obs.cat===cid?(c.oc+' selected'):''}" onclick="selChip(${id},'${cid}',this,'m')">${c.label}</div>`;}).join('')}</div></div>`
+        ).join('')}
+      </div>
     </div>
     <div class="ps"><div class="pst">Observación</div>
       <textarea class="ota" id="ota-m" placeholder="Notas adicionales...">${obs.txt||obs.texto||''}</textarea>
@@ -1273,8 +1310,10 @@ function openObsDia(ci,nombre,marca,fechasStr){
         </div>
         <div style="margin-bottom:10px">
           <label style="font-size:11px;color:var(--tx2);display:block;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Categoría</label>
-          <div class="chips" id="chips-range">
-            ${CATS.map(c=>`<div class="chip" onclick="selChip('range_${ci}','${c.id}',this,'range')">${c.label}</div>`).join('')}
+          <div id="chips-range">
+            ${[['Presencia',['presente','ausente','libre']],['Licencias médicas',['reposo','maternidad','paternidad','duelo']],['Otras',['vacaciones','capacitacion','justificado','suspendido','renuncia']]].map(([g,ids])=>
+              `<div class="obs-cat-section"><div class="obs-cat-title">${g}</div><div class="obs-chip-grid">${ids.map(cid=>{const c=getCat(cid);return`<div class="obs-chip" onclick="selChip('range_${ci}','${cid}',this,'range')">${c.label}</div>`;}).join('')}</div></div>`
+            ).join('')}
           </div>
         </div>
         <div style="margin-bottom:10px">
@@ -1286,7 +1325,11 @@ function openObsDia(ci,nombre,marca,fechasStr){
       </div>
     </div>
     <div class="ps"><div class="pst">Categoría para ${primera}</div>
-      <div class="chips" id="chips-d">${CATS.map(c=>`<div class="chip ${obs.cat===c.id?c.cls+' selected':''}" onclick="selChip('${ci}_${primera}','${c.id}',this,'d')">${c.label}</div>`).join('')}</div>
+      <div id="chips-d">
+        ${[['Presencia',['presente','ausente','libre']],['Licencias médicas',['reposo','maternidad','paternidad','duelo']],['Otras',['vacaciones','capacitacion','justificado','suspendido','renuncia']]].map(([g,ids])=>
+          `<div class="obs-cat-section"><div class="obs-cat-title">${g}</div><div class="obs-chip-grid">${ids.map(cid=>{const c=getCat(cid);return`<div class="obs-chip ${obs.cat===cid?(c.oc+' selected'):''}" onclick="selChip('${ci}_${primera}','${cid}',this,'d')">${c.label}</div>`;}).join('')}</div></div>`
+        ).join('')}
+      </div>
     </div>
     <div class="ps"><div class="pst">Observación</div>
       <textarea class="ota" id="ota-d" placeholder="Notas adicionales...">${obs.txt||obs.texto||''}</textarea>
@@ -1316,10 +1359,20 @@ function aplicarRango(ci){
 
 
 function selChip(id,catId,el,ctx){
-  const chips=el.closest('.chips').querySelectorAll('.chip');
-  chips.forEach(c=>{c.className='chip';});
+  // Support both .chips and .obs-chip-grid parent
+  const parent=el.closest('.chips')||el.closest('.obs-chip-grid')||el.closest('.jor-content');
+  if(parent){
+    const allChips=el.closest('.panel')?.querySelectorAll(`.obs-chip[onclick*="'${ctx}'"]`)||parent.querySelectorAll('.chip,.obs-chip');
+    allChips.forEach(c=>{
+      c.className=c.classList.contains('obs-chip')?'obs-chip':'chip';
+    });
+  }
   const cat=CATS.find(c=>c.id===catId);
-  el.className=`chip ${cat.cls} selected`;
+  if(el.classList.contains('obs-chip')){
+    el.className=`obs-chip ${cat.oc||''} selected`;
+  } else {
+    el.className=`chip ${cat.cls} selected`;
+  }
   _pending[ctx+'_'+id]=catId;
 }
 
@@ -1688,10 +1741,12 @@ function exportarPDV(){
 // ══════════════════════════════════════════════════════════════════════
 // JORNADAS — lógica completa adaptada de retail_horas
 // ══════════════════════════════════════════════════════════════════════
-const UMBRAL_EXTRA_MIN=8*60+30; // 510 min
-const DESC_ALM=60;
-const MAX_SEM=48;
-const MAX_DIA=8;
+const UMBRAL_EXTRA_MIN=8*60+30; // 510 min — jornada máxima antes de considerar horas extra
+const DESC_ALM=60;              // 60 min descuento almuerzo jornada continua
+const MAX_SEM=48;               // horas semanales objetivo
+const MAX_DIA=8;                // horas diarias objetivo
+const GAP_LARGO=120;            // > 120 min entre PDV = sospechoso (Caso 2a)
+const GAP_CORTO=20;             // < 20 min entre PDV = sospechoso (Caso 2b)
 const MES_ES={ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11};
 const MES_EN={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 const MES_ALL={...MES_ES,...MES_EN};
@@ -1749,36 +1804,65 @@ function buildJornadas(rows){
     if(!emps[ek])emps[ek]={nombre:r.nombre,cedula:r.cedula,dias:{}};
     const dk=fKeyJ(r.ent);
     if(!emps[ek].dias[dk])emps[ek].dias[dk]=[];
-    const tipo=!r.sal?'sin_salida':!sameDayJ(r.ent,r.sal)?'autocomp':'valida';
+
+    // CASO 1: salida de fecha diferente a entrada → autocomp (alerta)
+    let tipo='valida';
+    if(!r.sal) tipo='sin_salida';
+    else if(!sameDayJ(r.ent,r.sal)) tipo='fecha_diff'; // fecha distinta → alerta
     emps[ek].dias[dk].push({...r,tipo});
   }
+
   const result=[];
   for(const[ek,ed]of Object.entries(emps)){
     const diasArr=Object.keys(ed.dias).sort().map(dk=>{
       const fr=ed.dias[dk];
       const validas=fr.filter(f=>f.tipo==='valida');
+      const sinSalida=fr.filter(f=>f.tipo==='sin_salida');
+      const fechaDiff=fr.filter(f=>f.tipo==='fecha_diff'); // CASO 1
+
+      // Detect AM+PM: gap >= 20min between consecutive valid marcaciones
       let ampm=false;
+      const gaps=[]; // CASO 2: gaps between marcaciones
+      const alertasGap=[];
       if(validas.length>=2){
         const sv=[...validas].sort((a,b)=>a.ent-b.ent);
-        for(let i=1;i<sv.length;i++){if((sv[i].ent-sv[i-1].sal)/60000>=20){ampm=true;break;}}
+        for(let i=1;i<sv.length;i++){
+          const gapMin=(sv[i].ent-sv[i-1].sal)/60000;
+          gaps.push({desde:sv[i-1].sal,hasta:sv[i].ent,minutos:Math.round(gapMin)});
+          if(gapMin>=20) ampm=true;
+          // CASO 2a: gap > 2h → desplazamiento sospechosamente largo
+          if(gapMin>GAP_LARGO) alertasGap.push({tipo:'gap_largo',min:Math.round(gapMin),desde:sv[i-1].sal,hasta:sv[i].ent});
+          // CASO 2b: gap < 20min → llegó muy rápido al siguiente PDV
+          if(gapMin>0&&gapMin<GAP_CORTO) alertasGap.push({tipo:'gap_corto',min:Math.round(gapMin),desde:sv[i-1].sal,hasta:sv[i].ent});
+        }
       }
+
       const minBrutos=validas.reduce((s,f)=>s+(f.sal-f.ent)/60000,0);
       const desc=(minBrutos===0||ampm)?0:DESC_ALM;
       const minEfec=Math.max(0,minBrutos-desc);
       const hExtraMin=minEfec>UMBRAL_EXTRA_MIN?Math.max(0,minEfec-8*60):0;
-      const hasSin=fr.some(f=>f.tipo==='sin_salida');
-      const hasAuto=fr.some(f=>f.tipo==='autocomp');
-      const esSinSalida=validas.length===0;
-      return{dk,fecha:new Date(dk+'T12:00:00'),fr,validas,ampm,minBrutos,desc,minEfec,hEfec:minEfec/60,hExtraMin,hasSin,hasAuto,esSinSalida,sk:semKeyJ(new Date(dk+'T12:00:00'))};
+      const hasSin=sinSalida.length>0;
+      const hasAuto=fechaDiff.length>0; // CASO 1
+      const esSinSalida=validas.length===0&&sinSalida.length>0;
+      const hasGapLargo=alertasGap.some(a=>a.tipo==='gap_largo');
+      const hasGapCorto=alertasGap.some(a=>a.tipo==='gap_corto');
+
+      const obsOriginal=fr.map(f=>f.obsOrig||'').filter(Boolean).join(' | ');
+      return{dk,fecha:new Date(dk+'T12:00:00'),fr,validas,sinSalida,fechaDiff,ampm,gaps,alertasGap,obsOriginal,
+        minBrutos,desc,minEfec,hEfec:minEfec/60,hExtraMin,
+        hasSin,hasAuto,esSinSalida,hasGapLargo,hasGapCorto,
+        sk:semKeyJ(new Date(dk+'T12:00:00'))};
     });
+
     const semsMap={};
     for(const d of diasArr){
-      if(!semsMap[d.sk])semsMap[d.sk]={sk:d.sk,dias:[],minTotal:0,hExtraMin:0,diasTrab:0,diasSinSal:0};
+      if(!semsMap[d.sk])semsMap[d.sk]={sk:d.sk,dias:[],minTotal:0,hExtraMin:0,diasTrab:0,diasSinSal:0,alertasGap:[]};
       semsMap[d.sk].dias.push(d);
       semsMap[d.sk].minTotal+=d.minEfec;
       semsMap[d.sk].hExtraMin+=d.hExtraMin;
       if(d.fecha.getDay()!==0)semsMap[d.sk].diasTrab++;
       if(d.esSinSalida)semsMap[d.sk].diasSinSal++;
+      semsMap[d.sk].alertasGap.push(...d.alertasGap);
     }
     for(const sem of Object.values(semsMap)){let ac=0;for(const d of sem.dias){ac+=d.minEfec;d.acumSem=ac;}}
     result.push({ek,nombre:ed.nombre,cedula:ed.cedula,semanas:Object.values(semsMap).sort((a,b)=>a.sk.localeCompare(b.sk))});
@@ -1816,13 +1900,25 @@ function handleJornadasFile(input){
 
 function detectJCols(hdr){
   const find=(exact,partial,exclude=[])=>{let i=hdr.findIndex(c=>c===exact);if(i>=0)return i;i=hdr.findIndex(c=>c.includes(partial)&&!exclude.some(ex=>c.includes(ex)));return i;};
-  return{iN:find('nombre y apellido','nombre',[]),iC:find('cedula','ced',['suc']),iS:find('sucursal','suc',[]),iE:find('entrada','entr',[]),iSa:find('salida','sal',['suc','sucursal'])};
+  return{
+    iN:find('nombre y apellido','nombre',[]),
+    iC:find('cedula','ced',['suc']),
+    iS:find('sucursal','suc',[]),
+    iE:find('entrada','entr',[]),
+    iSa:find('salida','sal',['suc','sucursal']),
+    iO:find('observacion','observ',[]),  // columna Observación
+  };
 }
 function parseJCSV(txt){
   const L=txt.split(/\r?\n/).filter(l=>l.trim());
   const hdr=L[0].split(',').map(x=>x.trim().toLowerCase().replace(/[^a-z0-9 ]/g,''));
-  const{iN,iC,iS,iE,iSa}=detectJCols(hdr);
-  return L.slice(1).filter(l=>l.trim()).map(l=>{const c=l.split(',');return{nombre:(c[iN]||'').trim(),cedula:(c[iC]||'').trim(),suc:(c[iS]||'').trim(),ent:pDateJ(c[iE]),sal:c[iSa]&&c[iSa].trim()?pDateJ(c[iSa]):null};}).filter(r=>r.ent);
+  const{iN,iC,iS,iE,iSa,iO}=detectJCols(hdr);
+  return L.slice(1).filter(l=>l.trim()).map(l=>{
+    const c=l.split(',');
+    return{nombre:(c[iN]||'').trim(),cedula:(c[iC]||'').trim(),suc:(c[iS]||'').trim(),
+      ent:pDateJ(c[iE]),sal:c[iSa]&&c[iSa].trim()?pDateJ(c[iSa]):null,
+      obsOrig:(iO>=0&&c[iO]?c[iO].trim():'')};
+  }).filter(r=>r.ent);
 }
 function parseJXLSX(buf){
   const wb=XLSX.read(buf,{type:'array',cellDates:true});
@@ -1830,8 +1926,12 @@ function parseJXLSX(buf){
   const all=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,cellDates:true,dateNF:'dd-mmm-yyyy hh:mm:ss'});
   if(!all.length)return[];
   const hdr=(all[0]||[]).map(x=>String(x||'').trim().toLowerCase().replace(/[^a-z0-9 ]/g,''));
-  const{iN,iC,iS,iE,iSa}=detectJCols(hdr);
-  return all.slice(1).filter(c=>c&&c[iE]).map(c=>({nombre:String(c[iN]||'').trim(),cedula:String(c[iC]||'').trim(),suc:String(c[iS]||'').trim(),ent:pDateJ(c[iE]),sal:c[iSa]?pDateJ(c[iSa]):null})).filter(r=>r.ent);
+  const{iN,iC,iS,iE,iSa,iO}=detectJCols(hdr);
+  return all.slice(1).filter(c=>c&&c[iE]).map(c=>({
+    nombre:String(c[iN]||'').trim(),cedula:String(c[iC]||'').trim(),suc:String(c[iS]||'').trim(),
+    ent:pDateJ(c[iE]),sal:c[iSa]?pDateJ(c[iSa]):null,
+    obsOrig:iO>=0&&c[iO]?String(c[iO]).trim():'',
+  })).filter(r=>r.ent);
 }
 
 function poblarJornadas(){
@@ -1895,8 +1995,11 @@ function renderJornadas(){
             <div class="jor-stat"><div class="jor-stat-v" style="color:#8b5cf6">${hFmtC(sem.hExtraMin)}</div><div class="jor-stat-l">Extra</div></div>
             <div class="jor-stat"><div class="jor-stat-v" style="color:${sem.diasSinSal>0?'var(--rd)':'var(--gn)'}">${sem.diasSinSal}</div><div class="jor-stat-l">Sin salida</div></div>
           </div>
-          ${diasExt.length>0?`<div class="jor-chips">${diasExt.map(d=>`<span class="jor-chip jor-chip-ext">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} +${hFmtC(d.hExtraMin)}</span>`).join('')}</div>`:''}
-          ${diasSin.length>0?`<div class="jor-chips">${diasSin.map(d=>`<span class="jor-chip jor-chip-sin">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} sin salida</span>`).join('')}</div>`:''}
+          ${diasExt.length>0?`<div class="jor-chips">${diasExt.map(d=>`<span class="jor-chip jor-chip-ext">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} +${hFmtC(d.hExtraMin)} extra</span>`).join('')}</div>`:''}
+          ${diasSin.length>0?`<div class="jor-chips">${diasSin.map(d=>`<span class="jor-chip jor-chip-sin">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} ⚠️ sin salida</span>`).join('')}</div>`:''}
+          ${sem.dias.filter(d=>d.hasAuto).length>0?`<div class="jor-chips">${sem.dias.filter(d=>d.hasAuto).map(d=>`<span class="jor-chip jor-chip-fecha">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} ⚠️ fecha distinta</span>`).join('')}</div>`:''}
+          ${sem.dias.filter(d=>d.hasGapLargo).length>0?`<div class="jor-chips">${sem.dias.filter(d=>d.hasGapLargo).map(d=>`<span class="jor-chip jor-chip-gap">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} gap &gt;2h</span>`).join('')}</div>`:''}
+          ${sem.dias.filter(d=>d.hasGapCorto).length>0?`<div class="jor-chips">${sem.dias.filter(d=>d.hasGapCorto).map(d=>`<span class="jor-chip jor-chip-corto">${d.fecha.getDate()}-${MES_S[d.fecha.getMonth()]} gap &lt;30min</span>`).join('')}</div>`:''}
           <table class="jor-detail-tbl" style="margin-top:14px">
             <thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Acum.</th><th>Estado</th></tr></thead>
             <tbody>
@@ -1920,9 +2023,31 @@ function renderJornadas(){
       // Build alerts
       for(const d of sem.dias){
         const fStr=d.fecha.getDate()+'-'+MES_S[d.fecha.getMonth()];
-        if((d.hasSin||d.hasAuto)&&d.minEfec===0) alertas.push({tipo:'er',txt:`<strong>${emp.nombre}</strong> — ${fStr} (${DIA_S[d.fecha.getDay()]})<div class="al-date">${d.hasAuto?'Salida auto-completada (otra fecha)':'Sin salida registrada'}</div>`});
-        if(d.hExtraMin>0) alertas.push({tipo:'pu',txt:`<strong>${emp.nombre}</strong> — ${fStr}: <strong>${hFmt(d.minEfec)}</strong> efectivas (+${hFmtC(d.hExtraMin)} extra)<div class="al-date">Semana ${sem.sk}</div>`});
-        if(d.hEfec>0&&d.hEfec<MAX_DIA&&!d.hasSin&&!d.hasAuto) alertas.push({tipo:'wa',txt:`<strong>${emp.nombre}</strong> — ${fStr}: jornada de <strong>${hFmt(d.minEfec)}</strong> (menor a 8h)<div class="al-date">Semana ${sem.sk}</div>`});
+        const diaN=DIA_S[d.fecha.getDay()];
+
+        // CASO 1: sin salida
+        if(d.hasSin&&d.minEfec===0)
+          alertas.push({tipo:'er',txt:`<strong>${emp.nombre}</strong> — ${fStr} (${diaN}): sin salida registrada<div class="al-date">Semana ${sem.sk} · verificar manualmente</div>`});
+
+        // CASO 1: salida con fecha diferente
+        if(d.hasAuto)
+          alertas.push({tipo:'er',txt:`<strong>${emp.nombre}</strong> — ${fStr}: ⚠️ salida registrada en fecha diferente a la entrada<div class="al-date">Revisión requerida — posible error de marcación</div>`});
+
+        // CASO 2a: gap > 2h entre PDV
+        for(const g of d.alertasGap.filter(a=>a.tipo==='gap_largo'))
+          alertas.push({tipo:'wa',txt:`<strong>${emp.nombre}</strong> — ${fStr}: gap de <strong>${g.min} min (${Math.round(g.min/60*10)/10}h)</strong> entre marcaciones<div class="al-date">${hhmm(g.desde)} → ${hhmm(g.hasta)} · desplazamiento o pausa superior a 2h</div>`});
+
+        // CASO 2b: gap < 20min entre PDV
+        for(const g of d.alertasGap.filter(a=>a.tipo==='gap_corto'))
+          alertas.push({tipo:'in',txt:`<strong>${emp.nombre}</strong> — ${fStr}: nueva marcación a solo <strong>${g.min} min</strong> del check out anterior<div class="al-date">${hhmm(g.desde)} → ${hhmm(g.hasta)} · tiempo insuficiente para llegar a otro PDV</div>`});
+
+        // Horas extra
+        if(d.hExtraMin>0)
+          alertas.push({tipo:'pu',txt:`<strong>${emp.nombre}</strong> — ${fStr}: <strong>${hFmt(d.minEfec)}</strong> efectivas (+${hFmtC(d.hExtraMin)} extra)<div class="al-date">Semana ${sem.sk}</div>`});
+
+        // Jornada corta
+        if(d.hEfec>0&&d.hEfec<MAX_DIA&&!d.hasSin&&!d.hasAuto&&d.alertasGap.length===0)
+          alertas.push({tipo:'wa',txt:`<strong>${emp.nombre}</strong> — ${fStr}: jornada de <strong>${hFmt(d.minEfec)}</strong> (menor a 8h)<div class="al-date">Semana ${sem.sk}</div>`});
       }
       if(hTot<MAX_SEM) alertas.push({tipo:'in',txt:`<strong>${emp.nombre}</strong> — Semana ${sem.sk}: <strong>${hFmt(sem.minTotal)} / ${MAX_SEM}h</strong><div class="al-date">Faltan ${hFmtC(hFalt*60)} para completar las 48h</div>`});
     }
@@ -1969,7 +2094,7 @@ function exportJornadasExcel(){
 
 function _doExportJornadas(){
   const wb=XLSX.utils.book_new();
-  const rows=[['Empleado','CI','Semana','Fecha','Dia','Entrada','Salida','Estado','Sucursal/PDV','H. brutas','Desc. almuerzo','H. efectivas','H. extra (>8h)','Acum. semana','Faltan 48h','Estado dia']];
+  const rows=[['Empleado','CI','Semana','Fecha','Dia','Entrada','Salida','Estado marcación','Sucursal/PDV','Obs. original','H. brutas','Desc. almuerzo','H. efectivas','H. extra (>8h)','Acum. semana','Faltan 48h','Estado dia']];
   for(const emp of JDATA){
     for(const sem of emp.semanas){
       for(const d of sem.dias){
@@ -1977,8 +2102,9 @@ function _doExportJornadas(){
         rows.push([
           emp.nombre, emp.cedula, sem.sk, d.dk, DIA_S[d.fecha.getDay()],
           firstV?hhmm(firstV.ent):'', firstV&&firstV.sal?hhmm(firstV.sal):'',
-          d.hasSin?'Sin salida':d.hasAuto?'Auto-completado':'Válida',
+          d.hasSin?'Sin salida':d.hasAuto?'⚠️ Fecha distinta':'Válida',
           firstV?firstV.suc||'':'',
+          d.obsOriginal||'',
           +(d.minBrutos/60).toFixed(2), -(d.desc/60).toFixed(2),
           +(d.minEfec/60).toFixed(2), +(d.hExtraMin/60).toFixed(2),
           +(d.acumSem/60).toFixed(2), +Math.max(0,MAX_SEM-d.acumSem/60).toFixed(2),
