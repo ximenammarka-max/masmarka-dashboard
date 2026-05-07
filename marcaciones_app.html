@@ -419,6 +419,9 @@ body.dark .jor-bar-bg{background:var(--sf2);}
     <div id="view-asistencia" class="content" style="display:none">
       <div class="ph"><h1>Asistencia Diaria</h1><p>Control de presencia y observaciones por persona</p></div>
       <div class="filters">
+        <select class="fsel" id="f-mes-asist" onchange="seleccionarMesAsist()" style="font-weight:600">
+          <option value="">Seleccionar mes...</option>
+        </select>
         <div class="multi-date-wrap">
           <div class="multi-date-btn" id="mdb-asist" onclick="toggleMDD('mdd-asist')">
             📅 <span id="mdb-asist-label">Seleccioná fechas</span>
@@ -531,7 +534,12 @@ body.dark .jor-bar-bg{background:var(--sf2);}
           <input type="file" id="fi-jornadas" accept=".xls,.xlsx,.csv" style="display:none" onchange="handleJornadasFile(this)">
         </label>
         <select class="fsel" id="j-emp" onchange="renderJornadas()" style="display:none"><option value="">Todos los empleados</option></select>
-        <select class="fsel" id="j-sem" onchange="renderJornadas()" style="display:none"><option value="">Todas las semanas</option></select>
+        <div id="j-rango-wrap" style="display:none;display:flex;gap:6px;align-items:center">
+          <span style="font-size:12px;color:var(--tx2);font-weight:600">Desde</span>
+          <select class="fsel" id="j-desde" onchange="renderJornadas()" style="font-size:12px"></select>
+          <span style="font-size:12px;color:var(--tx2);font-weight:600">Hasta</span>
+          <select class="fsel" id="j-hasta" onchange="renderJornadas()" style="font-size:12px"></select>
+        </div>
         <button class="btn bts btsm" id="j-dl" style="display:none" onclick="exportJornadasExcel()">↓ Excel</button>
       </div>
 
@@ -717,9 +725,8 @@ window.onload=async function(){
 async function conectar(){
   const id=document.getElementById('sheetId').value.trim();
   const key=document.getElementById('apiKey').value.trim();
-  const dias=parseInt(document.getElementById('diasEsperados').value)||22;
   if(!id||!key){alert('Completá el ID y la API key');return;}
-  S.sheetId=id; S.apiKey=key; S.diasEsperados=dias;
+  S.sheetId=id; S.apiKey=key; S.diasEsperados=calcDiasHabiles();
   // Save to localStorage
   localStorage.setItem('marka_sheet_id',id);
   localStorage.setItem('marka_api_key',key);
@@ -891,6 +898,8 @@ function triggerViewRender(ddId){
   else if(prefix==='asist')renderAsistencia();
   else if(prefix==='marc')renderMarcaciones();
   else if(prefix==='prod')renderProductividad();
+  else if(prefix==='pdv')renderPDV();
+  else if(prefix==='aus')renderAusencias();
 }
 
 // ── FILTERS POPULATION ────────────────────────────────────────────────
@@ -913,6 +922,20 @@ function poblarFiltros(){
   });
 
   // Marca selects
+  // Populate month selector for Asistencia
+  const meses=[...new Set(fechas.map(f=>{const p=f.split('/');return p[2]+'/'+p[1];}))].sort();
+  const mesSel=document.getElementById('f-mes-asist');
+  if(mesSel){
+    const old=mesSel.value;
+    mesSel.innerHTML='<option value="">Seleccionar mes...</option>';
+    meses.forEach(m=>{
+      const[y,mo]=m.split('/');
+      const nm=new Date(+y,+mo-1,1).toLocaleDateString('es-PY',{month:'long',year:'numeric'});
+      mesSel.innerHTML+=`<option value="${m}">${nm.charAt(0).toUpperCase()+nm.slice(1)}</option>`;
+    });
+    if(old) mesSel.value=old;
+  }
+
   ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','f-marca-pdv','f-marca-aus','exp-marca'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const old=el.value;
@@ -994,6 +1017,23 @@ function renderResumen(){
 }
 
 // ── ASISTENCIA ────────────────────────────────────────────────────────
+function seleccionarMesAsist(){
+  const mesVal=document.getElementById('f-mes-asist').value;
+  if(!mesVal) return;
+  const [y,mo]=mesVal.split('/');
+  // Get all dates from that month
+  const fechas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechasMes=fechas.filter(f=>{const p=f.split('/');return p[2]===y&&p[1]===mo;});
+  // Check those dates in mdd-asist
+  const items=document.querySelectorAll('#mdd-asist-items .mdd-item input[type=checkbox]');
+  items.forEach(i=>{i.checked=fechasMes.includes(i.value);});
+  // Update all checkbox
+  const allCb=document.getElementById('mdd-asist-all');
+  if(allCb) allCb.checked=[...items].every(i=>i.checked);
+  updateMDDLabel('mdd-asist');
+  renderAsistencia();
+}
+
 function renderAsistencia(){
   const fechas=getSelDates('mdd-asist');
   const marca=document.getElementById('f-marca-asist').value;
@@ -1936,12 +1976,22 @@ function parseJXLSX(buf){
 
 function poblarJornadas(){
   const se=document.getElementById('j-emp');
-  const ss=document.getElementById('j-sem');
   se.innerHTML=(JDATA.length>1?'<option value="">Todos los empleados</option>':'')+JDATA.map(e=>`<option value="${e.ek}">${e.nombre}</option>`).join('');
   if(JDATA.length===1)se.value=JDATA[0].ek;
-  const sems=[...new Set(JDATA.flatMap(e=>e.semanas.map(s=>s.sk)))].sort();
-  ss.innerHTML='<option value="">Todas las semanas</option>'+sems.map(s=>`<option value="${s}">${s}</option>`).join('');
-  [se,ss].forEach(el=>el.style.display='block');
+  se.style.display='block';
+  // Populate date range from/to
+  const allDks=[...new Set(JDATA.flatMap(e=>e.semanas.flatMap(s=>s.dias.map(d=>d.dk))))].sort();
+  const jDesde=document.getElementById('j-desde');
+  const jHasta=document.getElementById('j-hasta');
+  if(jDesde&&jHasta&&allDks.length){
+    const fmtDk=dk=>{const[y,m,d]=dk.split('-');return`${d}/${m}/${y}`;};
+    jDesde.innerHTML=allDks.map(dk=>`<option value="${dk}">${fmtDk(dk)}</option>`).join('');
+    jHasta.innerHTML=allDks.map(dk=>`<option value="${dk}">${fmtDk(dk)}</option>`).join('');
+    jDesde.value=allDks[0];
+    jHasta.value=allDks[allDks.length-1];
+  }
+  const rangoWrap=document.getElementById('j-rango-wrap');
+  if(rangoWrap) rangoWrap.style.display='flex';
   document.getElementById('j-dl').style.display='block';
   // KPIs
   const allDias=JDATA.flatMap(e=>e.semanas.flatMap(s=>s.dias));
@@ -1959,12 +2009,24 @@ function poblarJornadas(){
 
 function renderJornadas(){
   const selE=document.getElementById('j-emp').value;
-  const selS=document.getElementById('j-sem').value;
+  const desde=document.getElementById('j-desde')?.value||'';
+  const hasta=document.getElementById('j-hasta')?.value||'';
   const emps=selE?JDATA.filter(e=>e.ek===selE):JDATA;
   let cardsHTML='', alertas=[];
 
   for(const emp of emps){
-    const sems=selS?emp.semanas.filter(s=>s.sk===selS):emp.semanas;
+    // Filter semanas that have at least one day in the date range
+    const sems=emp.semanas.map(sem=>({
+      ...sem,
+      dias:sem.dias.filter(d=>(!desde||d.dk>=desde)&&(!hasta||d.dk<=hasta))
+    })).filter(sem=>sem.dias.length>0);
+    // Recalculate semana totals after filtering
+    for(const sem of sems){
+      sem.minTotal=sem.dias.reduce((s,d)=>s+d.minEfec,0);
+      sem.hExtraMin=sem.dias.reduce((s,d)=>s+d.hExtraMin,0);
+      sem.diasTrab=sem.dias.filter(d=>d.fecha.getDay()!==0).length;
+      sem.diasSinSal=sem.dias.filter(d=>d.esSinSalida).length;
+    }
     for(const sem of sems){
       const hTot=sem.minTotal/60;
       const hFalt=Math.max(0,MAX_SEM-hTot);
