@@ -752,6 +752,8 @@ async function cargarDatosAPI(){
     const pdv=(r[3]||'').trim(),fechaRaw=(r[4]||'').trim();
     const entrada=pH(r[5]||''),salida=pH(r[6]||'');
     const fecha=pF(fechaRaw);
+    // Diagnostic: log first 3 rows to console
+    if(i<3) console.log(`[Marcación ${i}] fechaRaw="${fechaRaw}" → parsed="${fecha}" | entrada="${r[5]}" → "${entrada}"`);
     return{id:i,ci,nombre,marca,pdv,fecha,entrada,salida,duracion:cDur(entrada,salida)};
   }).filter(m=>m.nombre&&m.fecha);
 }
@@ -789,8 +791,44 @@ function pH(t){
   return `${String(h).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
 }
 function pF(f){
-  if(!f)return '';if(f.includes('/'))return f.trim();
-  const d=new Date(f);if(!isNaN(d))return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  if(!f)return '';
+  f=f.toString().replace(/\u00a0/g,' ').trim();
+  if(!f)return '';
+
+  // Already DD/MM/YYYY with zero padding → return as-is
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(f)) return f;
+
+  // Has slashes but might be D/M/YYYY or M/D/YYYY without zero padding
+  if(f.includes('/')){
+    const parts=f.split('/');
+    if(parts.length===3){
+      let [a,b,yr]=parts;
+      // If year is first (YYYY/MM/DD)
+      if(yr.length<=2&&a.length===4){[yr,a,b]=[a,b,yr];}
+      // Normalize to DD/MM/YYYY
+      // If a > 12 it must be the day; if b > 12 it must be the day
+      let day,month;
+      if(parseInt(a)>12){day=a;month=b;}
+      else if(parseInt(b)>12){day=b;month=a;}
+      else{day=a;month=b;} // ambiguous, assume DD/MM
+      return `${String(parseInt(day)).padStart(2,'0')}/${String(parseInt(month)).padStart(2,'0')}/${yr}`;
+    }
+  }
+
+  // ISO format YYYY-MM-DD or datetime
+  if(/^\d{4}-\d{2}-\d{2}/.test(f)){
+    const[yr,mo,dy]=f.slice(0,10).split('-');
+    return `${dy}/${mo}/${yr}`;
+  }
+
+  // Try native Date parse (handles many formats)
+  // Force UTC parse to avoid timezone shifts
+  const d=new Date(f.replace(/-/g,'/'));
+  if(!isNaN(d)){
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  }
+
+  // Last resort: return as-is
   return f.trim();
 }
 function cDur(e,s){
