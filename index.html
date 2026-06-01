@@ -744,18 +744,34 @@ async function cargarDatosAPI(){
   // Deduplicar por CI
   const seen=new Set();
   S.personas=S.personas.filter(p=>{if(seen.has(p.ci))return false;seen.add(p.ci);return true;});
-  const r3=await fetch(`${base}/Hoja%203!A2:G9999${k}`);
-  const d3=await r3.json();
-  if(d3.error)throw new Error(d3.error.message);
-  S.marcaciones=(d3.values||[]).map((r,i)=>{
+  // Load all rows - paginate if > 10000 rows
+  let allRows=[];
+  let startRow=2;
+  let keepLoading=true;
+  while(keepLoading){
+    const r3=await fetch(`${base}/Hoja%203!A${startRow}:G${startRow+9998}${k}`);
+    const d3=await r3.json();
+    if(d3.error)throw new Error(d3.error.message);
+    const batch=d3.values||[];
+    allRows=[...allRows,...batch];
+    console.log(`[API] Cargando desde fila ${startRow}, batch=${batch.length}, total=${allRows.length}`);
+    if(batch.length<9999) keepLoading=false; // last page
+    else startRow+=9999;
+    if(startRow>200000) keepLoading=false; // safety limit
+  }
+  const rawRows=allRows;
+  S.marcaciones=rawRows.map((r,i)=>{
     const ci=String(r[0]||'').trim().split('.')[0],nombre=(r[1]||'').trim(),marca=(r[2]||'').trim();
     const pdv=(r[3]||'').trim(),fechaRaw=(r[4]||'').trim();
     const entrada=pH(r[5]||''),salida=pH(r[6]||'');
     const fecha=pF(fechaRaw);
-    // Diagnostic: log first 3 rows to console
-    if(i<3) console.log(`[Marcación ${i}] fechaRaw="${fechaRaw}" → parsed="${fecha}" | entrada="${r[5]}" → "${entrada}"`);
+    if(i<3||i>=rawRows.length-3)
+      console.log(`[Marcación ${i}/${rawRows.length-1}] raw="${JSON.stringify(r[4])}" fechaRaw="${fechaRaw}" parsed="${fecha}"`);
     return{id:i,ci,nombre,marca,pdv,fecha,entrada,salida,duracion:cDur(entrada,salida)};
   }).filter(m=>m.nombre&&m.fecha);
+  const fechasUnicas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  console.log(`[FECHAS CARGADAS] ${S.marcaciones.length} filas, ${fechasUnicas.length} fechas: ${fechasUnicas.join(' | ')}`);
+  console.log(`[ULTIMA FECHA] ${fechasUnicas[fechasUnicas.length-1]||'NINGUNA'}`);
 }
 
 async function recargarDatos(){
