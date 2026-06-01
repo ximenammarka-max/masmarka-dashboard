@@ -783,39 +783,45 @@ function iniciarApp(){
 // ── HELPERS ───────────────────────────────────────────────────────────
 function pH(t){
   if(!t)return '';
-  t=t.replace(/\u00a0/g,' ').trim();
+  // Clean ALL types of spaces including non-breaking (\u00a0) and narrow no-break (\u202f)
+  t=t.toString().replace(/[\u00a0\u202f\u2009\u200a]/g,' ').replace(/\s+/g,' ').trim();
   t=t.replace(/p\.\s*m\./gi,'PM').replace(/a\.\s*m\./gi,'AM');
-  const m=t.match(/(\d{1,2}):(\d{2})/);if(!m)return t;
+  t=t.replace(/\bpm\b/gi,'PM').replace(/\bam\b/gi,'AM');
+  const m=t.match(/(\d{1,2}):(\d{2})/);if(!m)return '';
   let h=parseInt(m[1]),mn=parseInt(m[2]);
-  if(t.includes('PM')&&h<12)h+=12;if(t.includes('AM')&&h===12)h=0;
+  if(t.toUpperCase().includes('PM')&&h<12)h+=12;
+  if(t.toUpperCase().includes('AM')&&h===12)h=0;
   return `${String(h).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
 }
 function pF(f){
   if(!f)return '';
-  f=f.toString().replace(/\u00a0/g,' ').trim();
+  f=f.toString().replace(/[\u00a0\u202f]/g,' ').trim();
   if(!f)return '';
 
-  // Google Sheets serial number (e.g. 46208 = a date)
-  // Sheets serial: days since Dec 30, 1899
-  if(/^\d{4,5}$/.test(f)){
-    const serial=parseInt(f);
-    if(serial>40000&&serial<60000){ // sanity check: year ~2009–2064
-      const d=new Date(Date.UTC(1899,11,30)+serial*86400000);
-      return `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;
-    }
+  // ISO datetime with timezone: "2026-05-27T00:00:00.000Z" or "2026-05-27T00:00:00"
+  // Must parse as UTC to avoid day-shift due to timezone
+  if(/^\d{4}-\d{2}-\d{2}T/.test(f)){
+    const[yr,mo,dy]=f.slice(0,10).split('-');
+    return `${dy}/${mo}/${yr}`;
   }
 
-  // Already DD/MM/YYYY with zero padding → return as-is
+  // ISO date only: "2026-05-27"
+  if(/^\d{4}-\d{2}-\d{2}$/.test(f)){
+    const[yr,mo,dy]=f.split('-');
+    return `${dy}/${mo}/${yr}`;
+  }
+
+  // Already DD/MM/YYYY with zero padding
   if(/^\d{2}\/\d{2}\/\d{4}$/.test(f)) return f;
 
-  // Has slashes — might be D/M/YYYY, M/D/YYYY or DD/MM/YYYY without zero
+  // Has slashes: D/M/YYYY, M/D/YYYY or DD/MM/YYYY variants
   if(f.includes('/')){
     const parts=f.split('/');
     if(parts.length===3){
       let[a,b,yr]=parts;
       // Year first: YYYY/MM/DD
-      if(a.length===4){return `${String(parseInt(b)).padStart(2,'0')}/${String(parseInt(yr)).padStart(2,'0')}/${a}`;}
-      // Normalize day/month — if a>12 it's the day
+      if(a.length===4) return `${String(parseInt(b)).padStart(2,'0')}/${String(parseInt(yr)).padStart(2,'0')}/${a}`;
+      // Normalize: if a>12 it's the day, if b>12 it's the day
       let day,month;
       if(parseInt(a)>12){day=a;month=b;}
       else if(parseInt(b)>12){day=b;month=a;}
@@ -824,28 +830,13 @@ function pF(f){
     }
   }
 
-  // ISO format YYYY-MM-DD (with optional time)
-  if(/^\d{4}-\d{2}-\d{2}/.test(f)){
-    const[yr,mo,dy]=f.slice(0,10).split('-');
-    return `${dy}/${mo}/${yr}`;
-  }
-
-  // Formats like "27 May 2026" or "May 27, 2026"
-  const mNames={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12,
-    enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
-  const mMatch=f.match(/(\d{1,2})\s+([a-záéíóú]+)\s+(\d{4})/i)||f.match(/([a-záéíóú]+)\s+(\d{1,2}),?\s+(\d{4})/i);
-  if(mMatch){
-    let day,monthName,yr;
-    if(isNaN(mMatch[1])){[,monthName,day,yr]=mMatch;}
-    else{[,day,monthName,yr]=mMatch;}
-    const mo=mNames[monthName.toLowerCase()];
-    if(mo) return `${String(parseInt(day)).padStart(2,'0')}/${String(mo).padStart(2,'0')}/${yr}`;
-  }
-
-  // Native Date parse as last resort
-  const d=new Date(f.replace(/-/g,'/'));
-  if(!isNaN(d)&&d.getFullYear()>2000){
-    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  // Google Sheets serial number (days since Dec 30 1899)
+  if(/^\d{4,5}$/.test(f)){
+    const serial=parseInt(f);
+    if(serial>40000&&serial<60000){
+      const d=new Date(Date.UTC(1899,11,30)+serial*86400000);
+      return `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;
+    }
   }
 
   return f.trim();
