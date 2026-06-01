@@ -769,7 +769,7 @@ async function cargarDatosAPI(){
       console.log(`[Marcación ${i}/${rawRows.length-1}] raw="${JSON.stringify(r[4])}" fechaRaw="${fechaRaw}" parsed="${fecha}"`);
     return{id:i,ci,nombre,marca,pdv,fecha,entrada,salida,duracion:cDur(entrada,salida)};
   }).filter(m=>m.nombre&&m.fecha);
-  const fechasUnicas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechasUnicas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   console.log(`[FECHAS CARGADAS] ${S.marcaciones.length} filas, ${fechasUnicas.length} fechas: ${fechasUnicas.join(' | ')}`);
   console.log(`[ULTIMA FECHA] ${fechasUnicas[fechasUnicas.length-1]||'NINGUNA'}`);
 }
@@ -857,6 +857,9 @@ function pF(f){
 
   return f.trim();
 }
+// Sort DD/MM/YYYY dates correctly
+function sortFechas(arr){ return arr.sort((a,b)=>{const toK=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};return toK(a).localeCompare(toK(b));}); }
+
 function cDur(e,s){
   if(!e||!s)return '';
   const[eh,em]=e.split(':').map(Number),[sh,sm]=s.split(':').map(Number);
@@ -968,7 +971,7 @@ function triggerViewRender(ddId){
 
 // ── FILTERS POPULATION ────────────────────────────────────────────────
 function poblarFiltros(){
-  const fechas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const marcas=[...new Set([...S.personas.map(p=>p.marca),...S.marcaciones.map(m=>m.marca)])].sort();
   const personas=[...new Set(S.marcaciones.map(m=>m.nombre))].sort();
 
@@ -1086,7 +1089,7 @@ function seleccionarMesAsist(){
   if(!mesVal) return;
   const [y,mo]=mesVal.split('/');
   // Get all dates from that month
-  const fechas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const fechasMes=fechas.filter(f=>{const p=f.split('/');return p[2]===y&&p[1]===mo;});
   // Check those dates in mdd-asist
   const items=document.querySelectorAll('#mdd-asist-items .mdd-item input[type=checkbox]');
@@ -1280,7 +1283,7 @@ function openPersona(ci){
   const p=S.personas.find(x=>x.ci===ci);if(!p)return;
   const fechasFiltro=getSelDates('mdd-prod')||getSelDates('mdd-res');
   const st=getStats(ci,fechasFiltro);
-  const marc=filtrar({ci}).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const marc=filtrar({ci}).sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};return t(a.fecha).localeCompare(t(b.fecha));});
   const byDay={};marc.forEach(m=>{if(!byDay[m.fecha])byDay[m.fecha]=[];byDay[m.fecha].push(m);});
   const pct=st.cumplimiento;
   const daysHTML=Object.entries(byDay).map(([fecha,vis])=>`
@@ -1363,7 +1366,7 @@ function openObsDia(ci,nombre,marca,fechasStr){
   const marcDia=filtrar({fechas,marca}).filter(m=>m.ci===ci);
   const present=marcDia.length>0;
   const mins=marcDia.reduce((s,v)=>s+dToM(v.duracion),0);
-  const allFechas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const allFechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
 
   const visHTML=marcDia.length>0?`
     <div style="margin-bottom:12px">
@@ -1449,7 +1452,7 @@ function aplicarRango(ci){
   const cat=_pending['range_range_'+ci]||_pending['range_'+ci]||'';
   const nota=document.getElementById('range-nota').value;
   if(!cat){alert('Seleccioná una categoría');return;}
-  const allF=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const allF=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const rango=allF.filter(f=>f>=desde&&f<=hasta);
   let aplicados=0;
   rango.forEach(f=>{
@@ -1519,7 +1522,7 @@ function toggleExpFecha(){}
 function exportarCSV(){
   const marca=document.getElementById('exp-marca').value;
   const fmt=document.getElementById('exp-formato').value;
-  const fechas=[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const sep=';';let csv='';
 
   if(fmt==='honor'){
@@ -1565,7 +1568,7 @@ function exportarCSV(){
 }
 
 function exportarAsistencia(){
-  const fechas=getSelDates('mdd-asist')||[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechas=getSelDates('mdd-asist')||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const marca=document.getElementById('f-marca-asist').value;
   const persons=S.personas.filter(p=>!marca||p.marca===marca);
   const sep=';';
@@ -1814,7 +1817,7 @@ function expandPDV(pdv){
         </div>`).join('')}
     </div>
     <div class="ps"><div class="pst">Detalle de visitas</div>
-      ${marc.sort((a,b)=>a.fecha>b.fecha?1:-1).map((v,i)=>`
+      ${marc.sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};return t(a.fecha).localeCompare(t(b.fecha));}).map((v,i)=>`
         <div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;${i%2===0?'':'background:var(--sf2)'}">
           <span style="min-width:80px;color:var(--tx2)">${v.fecha}</span>
           <span style="flex:1;font-weight:500">${v.nombre}</span>
@@ -2319,7 +2322,7 @@ function renderAusencias(){
 }
 
 function exportarAusencias(){
-  const fechas=getSelDates('mdd-aus')||[...new Set(S.marcaciones.map(m=>m.fecha))].sort();
+  const fechas=getSelDates('mdd-aus')||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const marca=document.getElementById('f-marca-aus')?.value||'';
   const marcSet=new Set(S.marcaciones.map(m=>`${m.ci}_${m.fecha}`));
   const persons=S.personas.filter(p=>!marca||p.marca===marca);
