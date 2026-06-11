@@ -459,6 +459,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
         <select class="fsel" id="f-marca-marc" onchange="renderMarcaciones()"><option value="">Todas las marcas</option></select>
         <select class="fsel" id="f-persona-marc" onchange="renderMarcaciones()"><option value="">Todas las personas</option></select>
         <input class="finput" id="f-pdv-marc" placeholder="Buscar PDV..." oninput="renderMarcaciones()" style="width:150px">
+        <button class="btn btp btsm" onclick="exportarMarcacionesDirecto()">↓ Descargar CSV</button>
       </div>
       <div class="tc">
         <div class="tch"><span class="tct">Marcaciones</span><span class="tcc" id="marc-count"></span></div>
@@ -1519,6 +1520,28 @@ function openExport(){document.getElementById('exp-modal').classList.add('open')
 function closeExport(){document.getElementById('exp-modal').classList.remove('open');}
 function toggleExpFecha(){}
 
+function exportarMarcacionesDirecto(){
+  const fechas=getSelDates('mdd-marc');
+  const marca=document.getElementById('f-marca-marc').value;
+  const persona=document.getElementById('f-persona-marc').value;
+  const pdvq=document.getElementById('f-pdv-marc').value;
+  let marc=filtrar({fechas,marca,nombre:persona,pdv:pdvq});
+  if(S._soloIncompletas) marc=marc.filter(m=>m.entrada&&!m.salida);
+  // Sort by fecha then entrada
+  marc.sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};const fd=t(a.fecha).localeCompare(t(b.fecha));return fd!==0?fd:(a.entrada||'')>(b.entrada||'')?1:-1;});
+  const sep=';';
+  let csv=['CI','Nombre y Apellido','Marca','PDV','Fecha','Entrada','Salida','Duración','Categoría','Observación'].join(sep)+'\n';
+  marc.forEach(m=>{
+    const o=getObs(m.id);
+    csv+=[m.ci,m.nombre,m.marca,m.pdv,m.fecha,m.entrada||'',m.salida||'',m.duracion||'',o.cat||'',(o.txt||o.texto||'').replace(/;/g,',')].join(sep)+'\n';
+  });
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`marcaciones_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
 function exportarCSV(){
   const marca=document.getElementById('exp-marca').value;
   const fmt=document.getElementById('exp-formato').value;
@@ -1553,8 +1576,11 @@ function exportarCSV(){
       csv+=[p.nombre,p.ci,p.marca,'MERCHANT',...dateCells,pres,aus,libre,rep,st.horas||'0m',st.cumplimiento+'%'].join(sep)+'\n';
     });
   } else if(fmt==='detalle'){
+    // Use active filters from marcaciones view if available
+    const fechasFiltro=getSelDates('mdd-marc');
     csv=['CI','Nombre','Marca','Fecha','PDV','Entrada','Salida','Duración','Categoría','Observación'].join(sep)+'\n';
-    const marc=filtrar({marca});
+    const marc=filtrar({marca,fechas:fechasFiltro});
+    marc.sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};const fd=t(a.fecha).localeCompare(t(b.fecha));return fd!==0?fd:a.entrada>b.entrada?1:-1;});
     marc.forEach(m=>{const o=getObs(m.id);csv+=[m.ci,m.nombre,m.marca,m.fecha,m.pdv,m.entrada||'',m.salida||'',m.duracion||'',o.cat||'',(o.txt||o.texto||'').replace(/;/g,',')].join(sep)+'\n';});
   } else {
     csv=['CI','Nombre','Marca','Días trabajados','Días esperados','Horas totales','PDV únicos','Visitas','Aus. justif.','Cumplimiento'].join(sep)+'\n';
