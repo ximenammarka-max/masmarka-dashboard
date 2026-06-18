@@ -904,15 +904,31 @@ async function cargarDatosAPI(){
     S.almuerzos=[];
     console.log('[FICHAJES] Error al cargar:',e.message);
   }
+
+  buildIndices();
+}
+
+// ── ÍNDICES DE RENDIMIENTO ───────────────────────────────────────────
+// Agrupa marcaciones por CI una sola vez para evitar recorrer S.marcaciones
+// completo en cada llamada a getStats/filtrar (clave para no trabar la app
+// con miles de filas).
+function buildIndices(){
+  S._idxPorCI={};
+  S.marcaciones.forEach(m=>{
+    if(!S._idxPorCI[m.ci]) S._idxPorCI[m.ci]=[];
+    S._idxPorCI[m.ci].push(m);
+  });
+  S._todasFechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  S._statsCache={}; // se invalida cada vez que se reconstruyen índices
 }
 
 async function recargarDatos(){
   if(!S.sheetId)return;
-  try{await cargarDatosAPI();poblarFiltros(true);renderAll();renderSBP();}catch(e){}
+  try{await cargarDatosAPI();poblarFiltros(true);renderVistaActiva();renderSBP();}catch(e){}
 }
 function cargarDemo(){
   S.diasEsperados=calcDiasHabiles();
-  S.personas=DP;S.marcaciones=genDM();S.almuerzos=genDA();iniciarApp();
+  S.personas=DP;S.marcaciones=genDM();S.almuerzos=genDA();buildIndices();iniciarApp();
 }
 function iniciarApp(){
   S.observaciones=JSON.parse(localStorage.getItem('marka_obs')||'{}');
@@ -1070,7 +1086,7 @@ function getObs(id){return S.observaciones[id]||{cat:'',texto:''};}
 function getDO(ci,f){return S.observaciones[`day_${ci}_${f}`]||{cat:'',texto:''};}
 function sObs(id,cat,txt){S.observaciones[id]={cat,txt};persist();}
 function sDO(ci,f,cat,txt){S.observaciones[`day_${ci}_${f}`]={cat,txt};persist();}
-function persist(){localStorage.setItem('marka_obs',JSON.stringify(S.observaciones));}
+function persist(){localStorage.setItem('marka_obs',JSON.stringify(S.observaciones));S._statsCache={};}
 function pc(pct){return pct>=80?'g':pct>=50?'y':'r';}
 function ptc(pct){return pct>=80?'var(--gn)':pct>=50?'var(--yw)':'var(--rd)';}
 // Granular 4-level color: 🟢🟡🟠🔴
@@ -1086,7 +1102,10 @@ function getSelDates(ddId){
 }
 
 function filtrar(f={}){
-  return S.marcaciones.filter(m=>{
+  // Si se filtra por una persona específica, arrancar desde el índice
+  // (mucho más rápido que recorrer todas las marcaciones cuando hay miles)
+  const base=(f.ci&&S._idxPorCI&&S._idxPorCI[f.ci])?S._idxPorCI[f.ci]:S.marcaciones;
+  return base.filter(m=>{
     if(f.fechas&&f.fechas.length&&!f.fechas.includes(m.fecha))return false;
     if(f.marca&&m.marca!==f.marca)return false;
     if(f.ci&&m.ci!==f.ci)return false;
@@ -1097,24 +1116,37 @@ function filtrar(f={}){
 }
 
 function getStats(ci,fechasFiltro){
-  const marc=filtrar({ci,fechas:fechasFiltro&&fechasFiltro.length?fechasFiltro:null});
-  const dias=new Set(marc.map(m=>m.fecha)).size;
+  // Cache: misma persona + mismas fechas no se recalcula
+  const cacheKey=ci+'|'+(fechasFiltro&&fechasFiltro.length?fechasFiltro.join(','):'ALL');
+  if(S._statsCache&&S._statsCache[cacheKey]) return S._statsCache[cacheKey];
+
+  // Usar índice por CI en vez de recorrer S.marcaciones completo
+  const todasDePersona=(S._idxPorCI&&S._idxPorCI[ci])||S.marcaciones.filter(m=>m.ci===ci);
+  const marc=fechasFiltro&&fechasFiltro.length
+    ? todasDePersona.filter(m=>fechasFiltro.includes(m.fecha))
+    : todasDePersona;
+
+  const fechasTrabajadas=new Set(marc.map(m=>m.fecha));
+  const dias=fechasTrabajadas.size;
   const pdv=new Set(marc.map(m=>m.pdv)).size;
   const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
+
   // Count justificadas (no resta productividad)
-  const todasF=[...new Set(S.marcaciones.map(m=>m.fecha))];
+  const todasF=S._todasFechas||[...new Set(S.marcaciones.map(m=>m.fecha))];
   let ausJust=0,ausTot=0;
   todasF.forEach(f=>{
-    const trabajó=marc.some(m=>m.fecha===f);
-    if(!trabajó){
+    if(!fechasTrabajadas.has(f)){
       ausTot++;
       const obs=getDO(ci,f);
       if(obs.cat&&!restaProd(obs.cat))ausJust++;
     }
   });
-  const diasEfectivos=dias+ausJust; // justified don't count against
   const cumpl=Math.min(100,Math.round(dias/S.diasEsperados*100));
-  return{dias,pdvUnicos:pdv,visitas:marc.length,horas:mToH(mins),totalMins:mins,cumplimiento:cumpl,ausJust,ausTot};
+  const result={dias,pdvUnicos:pdv,visitas:marc.length,horas:mToH(mins),totalMins:mins,cumplimiento:cumpl,ausJust,ausTot};
+
+  if(!S._statsCache) S._statsCache={};
+  S._statsCache[cacheKey]=result;
+  return result;
 }
 
 // ── MULTI-DATE DROPDOWN ───────────────────────────────────────────────
@@ -1247,7 +1279,8 @@ function renderSBP(q=''){
 
 function renderSBAlertas(){
   const el=document.getElementById('sb-alertas');if(!el)return;
-  const hoy=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]).slice(-1)[0];
+  const fechasOrd=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  const hoy=fechasOrd[fechasOrd.length-1];
   if(!hoy){el.innerHTML='<div style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.3)">Sin datos</div>';return;}
 
   const marcHoy=S.marcaciones.filter(m=>m.fecha===hoy);
@@ -1296,6 +1329,9 @@ function filterSB(){
 }
 
 // ── RENDER ALL ────────────────────────────────────────────────────────
+// renderAll se usa solo en la carga inicial de la app (iniciarApp), donde
+// conviene precalcular Resumen/Asistencia/Marcaciones/Productividad para que
+// la navegación entre pestañas sea instantánea la primera vez.
 function renderAll(){renderResumen();renderAsistencia();renderMarcaciones();renderProductividad();}
 
 // ── RESUMEN ───────────────────────────────────────────────────────────
@@ -1900,16 +1936,27 @@ function openPanel(){document.getElementById('panel').classList.add('open');docu
 function closePanel(){document.getElementById('panel').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
+let _activeView='resumen';
 function showView(v){
+  _activeView=v;
   ['resumen','asistencia','marcaciones','productividad','pdv','jornadas','ausencias','mapa'].forEach(n=>{
     document.getElementById(`view-${n}`).style.display=n===v?'block':'none';
     document.getElementById(`nav-${n}`)?.classList.toggle('active',n===v);
     document.getElementById(`tab-${n}`)?.classList.toggle('active',n===v);
   });
-  if(v==='asistencia')renderAsistencia();
-  if(v==='pdv')renderPDV();
-  if(v==='ausencias')renderAusencias();
-  if(v==='mapa')renderMapa();
+  renderVistaActiva();
+}
+
+// Renderiza solo la vista que el usuario está mirando — evita recalcular
+// las otras 7 vistas (Resumen, Asistencia, Marcaciones, Productividad, PDV,
+// Jornadas, Ausencias, Mapa) cada vez que cambian datos o filtros.
+function renderVistaActiva(){
+  const fn={
+    resumen:renderResumen, asistencia:renderAsistencia, marcaciones:renderMarcaciones,
+    productividad:renderProductividad, pdv:renderPDV, ausencias:renderAusencias, mapa:renderMapa,
+  };
+  if(fn[_activeView]) fn[_activeView]();
+  // Jornadas no se auto-renderiza: depende de datos ya cargados con JDATA, se mantiene como está
 }
 
 // ── EXPORT CSV ────────────────────────────────────────────────────────
@@ -3075,7 +3122,7 @@ function setAR(){
   upd();_ct=setInterval(()=>{rem--;if(rem<=0)rem=secs;upd();},1000);
   _rt=setInterval(async()=>{
     rem=secs;[d1,d2].forEach(d=>{if(d)d.className='rdot syncing';});if(l1)l1.textContent='Actualizando…';
-    try{await cargarDatosAPI();poblarFiltros(true);renderAll();renderSBP();}catch(e){}
+    try{await cargarDatosAPI();poblarFiltros(true);renderVistaActiva();renderSBP();}catch(e){}
     [d1,d2].forEach(d=>{if(d)d.className='rdot active';});
   },secs*1000);
 }
