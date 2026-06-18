@@ -4,21 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>+Marka · Control de Marcaciones</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 :root{
-  --sb:#1a1f2e;--sb-h:#252b3d;--sb-a:#2e3650;
+  --sb:#161414;--sb-h:#201d1d;--sb-a:#2a1316;
   --bg:#f0f2f5;--sf:#ffffff;--sf2:#f7f8fa;--bd:#e8eaed;
-  --ac:#1a1f2e;--gn:#2eb872;--gn-bg:#e8f8ee;--rd:#e8404a;--rd-bg:#fdecea;
-  --yw:#f59e0b;--yw-bg:#fef3c7;--bl:#3b82f6;--bl-bg:#dbeafe;--pu:#8b5cf6;--pu-bg:#ede9fe;
-  --tx:#1a1f2e;--tx2:#6b7280;--tx3:#9ca3af;
+  --ac:#c11d2a;--gn:#3cb3a8;--gn-bg:#e3f5f3;--rd:#c11d2a;--rd-bg:#fbe9ea;
+  --yw:#e8a045;--yw-bg:#fdf1e2;--bl:#5b9bd5;--bl-bg:#e7f0f9;--pu:#9b7fd4;--pu-bg:#f0ebf9;
+  --tx:#161414;--tx2:#6b6464;--tx3:#9c9494;
   --r:12px;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);--shm:0 4px 16px rgba(0,0,0,.10);
   --fn:'Inter',sans-serif;
+}
+body.dark{
+  --sb:#0d0c0c;--sb-h:#161414;--sb-a:#2a1316;
+  --bg:#0d0c0c;--sf:#161414;--sf2:#1e1b1b;--bd:rgba(255,255,255,.08);
+  --ac:#e8293a;--gn:#3cb3a8;--gn-bg:rgba(60,179,168,.13);--rd:#e8293a;--rd-bg:rgba(193,29,42,.15);
+  --yw:#e8a045;--yw-bg:rgba(232,160,69,.13);--bl:#5b9bd5;--bl-bg:rgba(91,155,213,.13);--pu:#9b7fd4;--pu-bg:rgba(155,127,212,.13);
+  --tx:#f2eeee;--tx2:#9c9494;--tx3:#5a5252;
+  --sh:0 2px 12px rgba(0,0,0,.4);--shm:0 8px 32px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;line-height:1.5;}
 /* SETUP */
-#setup{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1f2e 0%,#252b3d 100%);}
+#setup{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#161414 0%,#0d0c0c 100%);}
 .sc{background:#fff;border-radius:20px;padding:44px;width:480px;box-shadow:0 24px 80px rgba(0,0,0,.25);}
 .sl{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
 .lm{width:36px;height:36px;background:var(--ac);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px;}
@@ -33,7 +43,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;l
 .bd:hover{opacity:.88;}
 .bdemo{width:100%;padding:9px;background:transparent;border:1.5px dashed var(--bd);border-radius:9px;color:var(--tx2);font-family:var(--fn);font-size:13px;cursor:pointer;transition:all .15s;margin-top:8px;}
 .bdemo:hover{border-color:var(--ac);color:var(--ac);}
-.saved-info{background:#e8f8ee;border:1px solid var(--gn);border-radius:8px;padding:10px 14px;font-size:12px;color:#15803d;margin-bottom:14px;display:none;}
+.saved-info{background:var(--gn-bg);border:1px solid var(--gn);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gn);margin-bottom:14px;display:none;}
 /* LAYOUT */
 #app{display:none;}
 .layout{display:flex;height:100vh;overflow:hidden;}
@@ -98,7 +108,9 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;l
 .mdd-badge{background:var(--ac);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:auto;}
 /* STATS */
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
-.sc2{background:var(--sf);border-radius:var(--r);border:1px solid var(--bd);padding:16px 18px;box-shadow:var(--sh);}
+.sc2{background:var(--sf);border-radius:var(--r);border:1px solid var(--bd);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease;}
+.sc2:hover{transform:translateY(-1px);box-shadow:var(--shm);}
+.sc2::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--bd),transparent 70%);}
 .slbl{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
 .sval{font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--tx);}
 .ssub{font-size:12px;color:var(--tx3);margin-top:3px;}
@@ -198,7 +210,7 @@ tbody td{padding:9px 14px;font-size:13px;vertical-align:middle;}
 .cr{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
 .cl{font-size:12px;color:var(--tx2);width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cbg{flex:1;height:7px;background:var(--bg);border-radius:4px;overflow:hidden;}
-.cfi{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gn),#2dd4bf);}
+.cfi{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gn),#5fcfc5);}
 .cv{font-size:12px;font-weight:600;color:var(--tx);width:22px;text-align:right;}
 /* ASIST ROW */
 .ar{background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:7px;display:flex;align-items:center;gap:12px;padding:11px 14px;transition:box-shadow .12s;}
@@ -216,8 +228,7 @@ tbody td{padding:9px 14px;font-size:13px;vertical-align:middle;}
 .pt{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;}
 .ppf{height:100%;border-radius:3px;}
 .pp{font-size:11px;font-weight:700;min-width:32px;text-align:right;}
-/* DARK MODE */
-body.dark{--bg:#0f1117;--sf:#1a1d27;--sf2:#22263a;--bd:#2e3347;--tx:#e8eaf0;--tx2:#8b90a8;--tx3:#5a6080;--gn-bg:#1a3d2a;--rd-bg:#3d1a1a;--yw-bg:#3d2e0a;--bl-bg:#1a2a3d;--pu-bg:#2a1a3d;}
+/* DARK MODE — colores base ya definidos en :root via body.dark{} arriba */
 body.dark .sc,.body.dark .fld input,.body.dark .fld select{background:var(--sf);color:var(--tx);}
 body.dark .fsel,.body.dark .finput,.body.dark .fld input,.body.dark .fld select,.body.dark .chip,.body.dark .ota,.body.dark .multi-date-btn,.body.dark .multi-date-dropdown,.body.dark .mod{background:var(--sf);border-color:var(--bd);color:var(--tx);}
 body.dark .mdd-item:hover{background:var(--sf2);}
@@ -294,6 +305,20 @@ body.dark .pb,.body.dark .cbg,.body.dark .pt{background:var(--sf2);}
 body.dark .jor-card,.body.dark .al-panel{background:var(--sf);border-color:var(--bd);}
 body.dark .jor-stat{background:var(--sf2);}
 body.dark .jor-bar-bg{background:var(--sf2);}
+
+/* ── MAPAS ──────────────────────────────────────────── */
+.map-box{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+.map-box .leaflet-container{background:#eef0f3;font-family:var(--fn);}
+body.dark .map-box .leaflet-container{background:#1a1d27;}
+.map-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--tx2);}
+.map-legend span{display:inline-flex;align-items:center;gap:5px;}
+.map-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.reco-stat{background:var(--sf2);border-radius:9px;padding:12px;text-align:center;}
+.reco-stat-v{font-size:20px;font-weight:800;}
+.reco-stat-l{font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px;margin-top:3px;}
+.reco-list-item{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px;}
+.reco-list-item:last-child{border-bottom:none;}
+.reco-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -357,6 +382,9 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       <div class="ni" id="nav-ausencias" onclick="showView('ausencias')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>Ausencias
       </div>
+      <div class="ni" id="nav-mapa" onclick="showView('mapa')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Mapa de Cobertura
+      </div>
       <div class="nsl" style="margin-top:14px">Alertas</div>
       <div id="sb-alertas"></div>
       <div class="nsl" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
@@ -390,6 +418,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
         <button class="ttab" id="tab-pdv" onclick="showView('pdv')">Reporte PDV</button>
         <button class="ttab" id="tab-jornadas" onclick="showView('jornadas')">Jornadas</button>
         <button class="ttab" id="tab-ausencias" onclick="showView('ausencias')">Ausencias</button>
+        <button class="ttab" id="tab-mapa" onclick="showView('mapa')">Mapa</button>
       </div>
       <div class="tright">
         <div class="spill"><div class="rdot" id="rd2"></div><span id="rl2">—</span></div>
@@ -415,7 +444,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       </div>
       <div class="sg" id="res-stats"></div>
       <div class="sg" id="res-stats2" style="grid-template-columns:repeat(7,1fr);margin-top:-8px"></div>
-      <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#e8404a;font-weight:600"></div>
+      <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #c11d2a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#c11d2a;font-weight:600"></div>
       <div class="twocol">
         <div class="tc"><div class="tch"><span class="tct">Top PDV visitados</span></div><div style="padding:14px" id="chart-pdv"></div></div>
         <div class="tc"><div class="tch"><span class="tct">Visitas por marca</span></div><div style="padding:14px" id="chart-marca"></div></div>
@@ -565,7 +594,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       <div class="sg" id="j-kpis" style="display:none;grid-template-columns:repeat(4,1fr)"></div>
 
       <!-- Alerta resumen inline -->
-      <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#e8404a;font-weight:600"></div>
+      <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #c11d2a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#c11d2a;font-weight:600"></div>
 
       <!-- Content -->
       <div id="j-content">
@@ -612,6 +641,46 @@ body.dark .jor-bar-bg{background:var(--sf2);}
           </tr></thead>
           <tbody id="aus-tbody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- MAPA -->
+    <div id="view-mapa" class="content" style="display:none">
+      <div class="ph"><h1>Mapa de Cobertura</h1><p>Ubicación geográfica de las marcaciones y recorrido por persona</p></div>
+      <div class="filters">
+        <div class="multi-date-wrap">
+          <div class="multi-date-btn" id="mdb-mapa" onclick="toggleMDD('mdd-mapa')">
+            📅 <span id="mdb-mapa-label">Todas las fechas</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="multi-date-dropdown" id="mdd-mapa">
+            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-mapa')"><input type="checkbox" id="mdd-mapa-all" checked> Todas las fechas</div>
+            <div id="mdd-mapa-items"></div>
+          </div>
+        </div>
+        <select class="fsel" id="f-marca-mapa" onchange="renderMapa()"><option value="">Todas las marcas</option></select>
+        <select class="fsel" id="f-persona-mapa" onchange="renderMapa()"><option value="">📍 Cobertura general</option></select>
+      </div>
+      <div class="sg" style="grid-template-columns:repeat(3,1fr)" id="mapa-stats"></div>
+      <div id="mapa-cobertura-wrap">
+        <div class="map-box"><div id="map-cobertura" style="height:520px"></div></div>
+        <div class="map-legend">
+          <span><span class="map-dot" style="background:#c11d2a"></span>Alta actividad</span>
+          <span><span class="map-dot" style="background:#f59e0b"></span>Media actividad</span>
+          <span><span class="map-dot" style="background:#3cb3a8"></span>Baja actividad</span>
+        </div>
+      </div>
+      <div id="mapa-recorrido-wrap" style="display:none">
+        <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="tc" style="padding:18px"><div id="reco-info"></div></div>
+            <div class="tc">
+              <div class="tch"><span class="tct">Locales visitados</span><span class="tcc" id="reco-count"></span></div>
+              <div id="reco-lista" style="padding:10px 18px;max-height:340px;overflow-y:auto"></div>
+            </div>
+          </div>
+          <div class="map-box"><div id="map-recorrido" style="height:560px"></div></div>
+        </div>
       </div>
     </div>
 
@@ -737,7 +806,7 @@ window.onload=async function(){
     const loader=document.createElement('div');
     loader.id='loader-overlay';
     loader.style.cssText='position:fixed;inset:0;background:rgba(26,31,46,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
-    loader.innerHTML='<div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#2eb872;border-radius:50%;animation:spin .7s linear infinite"></div><span style="color:#fff;font-family:Inter,sans-serif;font-size:14px;font-weight:500">Cargando datos...</span>';
+    loader.innerHTML='<div style="width:36px;height:36px;border:3px solid rgba(255,255,255,.15);border-top-color:#3cb3a8;border-radius:50%;animation:spin .7s linear infinite"></div><span style="color:#fff;font-family:Inter,sans-serif;font-size:14px;font-weight:500">Cargando datos...</span>';
     document.body.appendChild(loader);
     try{
       await cargarDatosAPI();
@@ -778,12 +847,12 @@ async function cargarDatosAPI(){
   // Deduplicar por CI
   const seen=new Set();
   S.personas=S.personas.filter(p=>{if(seen.has(p.ci))return false;seen.add(p.ci);return true;});
-  // Load all rows - paginate if > 10000 rows
+  // Load all rows - paginate if > 10000 rows (now includes lat/lng cols H-K)
   let allRows=[];
   let startRow=2;
   let keepLoading=true;
   while(keepLoading){
-    const r3=await fetch(`${base}/Hoja%203!A${startRow}:G${startRow+9998}${k}`);
+    const r3=await fetch(`${base}/Hoja%203!A${startRow}:K${startRow+9998}${k}`);
     const d3=await r3.json();
     if(d3.error)throw new Error(d3.error.message);
     const batch=d3.values||[];
@@ -799,9 +868,12 @@ async function cargarDatosAPI(){
     const pdv=(r[3]||'').trim(),fechaRaw=(r[4]||'').trim();
     const entrada=pH(r[5]||''),salida=pH(r[6]||'');
     const fecha=pF(fechaRaw);
+    // Coordenadas: H=lat_in, I=lng_in, J=lat_out, K=lng_out
+    const latIn=parseFloat(r[7])||null, lngIn=parseFloat(r[8])||null;
+    const latOut=parseFloat(r[9])||null, lngOut=parseFloat(r[10])||null;
     if(i<3||i>=rawRows.length-3)
       console.log(`[Marcación ${i}/${rawRows.length-1}] raw="${JSON.stringify(r[4])}" fechaRaw="${fechaRaw}" parsed="${fecha}"`);
-    return{id:i,ci,nombre,marca,pdv,fecha,entrada,salida,duracion:cDur(entrada,salida)};
+    return{id:i,ci,nombre,marca,pdv,fecha,entrada,salida,duracion:cDur(entrada,salida),latIn,lngIn,latOut,lngOut};
   }).filter(m=>m.nombre&&m.fecha);
   const fechasUnicas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   console.log(`[FECHAS CARGADAS] ${S.marcaciones.length} filas, ${fechasUnicas.length} fechas: ${fechasUnicas.join(' | ')}`);
@@ -1096,6 +1168,7 @@ function triggerViewRender(ddId){
   else if(prefix==='prod')renderProductividad();
   else if(prefix==='pdv')renderPDV();
   else if(prefix==='aus')renderAusencias();
+  else if(prefix==='mapa')renderMapa();
 }
 
 // ── FILTERS POPULATION ────────────────────────────────────────────────
@@ -1105,7 +1178,7 @@ function poblarFiltros(){
   const personas=[...new Set(S.marcaciones.map(m=>m.nombre))].sort();
 
   // Populate multi-date dropdowns
-  ['res','asist','marc','prod','pdv','aus'].forEach(prefix=>{
+  ['res','asist','marc','prod','pdv','aus','mapa'].forEach(prefix=>{
     const cont=document.getElementById(`mdd-${prefix}-items`);if(!cont)return;
     const isAsist=prefix==='asist';
     cont.innerHTML=fechas.map(f=>`
@@ -1132,7 +1205,7 @@ function poblarFiltros(){
     if(old) mesSel.value=old;
   }
 
-  ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','f-marca-pdv','f-marca-aus','exp-marca'].forEach(id=>{
+  ['f-marca-res','f-marca-asist','f-marca-marc','f-marca-prod','f-marca-pdv','f-marca-aus','f-marca-mapa','exp-marca'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
     const old=el.value;
     el.innerHTML=id==='exp-marca'?'<option value="">Todas</option>':'<option value="">Todas las marcas</option>';
@@ -1146,6 +1219,12 @@ function poblarFiltros(){
     pel.innerHTML='<option value="">Todas las personas</option>';
     personas.forEach(p=>pel.innerHTML+=`<option value="${p}">${p}</option>`);
     if(old)pel.value=old;
+  }
+  const pmapa=document.getElementById('f-persona-mapa');if(pmapa){
+    const old=pmapa.value;
+    pmapa.innerHTML='<option value="">📍 Cobertura general</option>';
+    personas.forEach(p=>pmapa.innerHTML+=`<option value="${p}">${p}</option>`);
+    if(old)pmapa.value=old;
   }
 }
 
@@ -1179,8 +1258,8 @@ function renderSBAlertas(){
 
   const items=[];
   if(tardanzas.length>0) items.push({icon:'⚠️',label:`${tardanzas.length} tardanza${tardanzas.length!==1?'s':''}`,color:'#f59e0b',action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='entrada';renderMarcaciones();`});
-  if(sinCheckout.length>0) items.push({icon:'🔴',label:`${sinCheckout.length} sin check out`,color:'#e8404a',action:`filtrarIncompletas();`});
-  if(almExcedidos.length>0) items.push({icon:'🍴',label:`${almExcedidos.length} almuerzo${almExcedidos.length!==1?'s':''} excedido${almExcedidos.length!==1?'s':''}`,color:'#e8404a',action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones();`});
+  if(sinCheckout.length>0) items.push({icon:'🔴',label:`${sinCheckout.length} sin check out`,color:'#c11d2a',action:`filtrarIncompletas();`});
+  if(almExcedidos.length>0) items.push({icon:'🍴',label:`${almExcedidos.length} almuerzo${almExcedidos.length!==1?'s':''} excedido${almExcedidos.length!==1?'s':''}`,color:'#c11d2a',action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones();`});
 
   if(items.length===0){
     el.innerHTML='<div style="padding:8px 10px;font-size:11px;color:rgba(46,184,114,.7);display:flex;align-items:center;gap:6px">✓ Todo en orden hoy</div>';
@@ -1247,9 +1326,9 @@ function renderResumen(){
 
   document.getElementById('res-stats').innerHTML=`
     <div class="sc2"><div class="slbl">Marcaciones</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
-    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">de ${S.personas.length} registradas</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">de ${S.personas.length} registradas</div></div>
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Horas registradas</div><div class="sval" style="color:var(--bl)">${Math.round(mins/60*10)/10}h</div><div class="ssub">con entrada y salida</div></div>
-    <div class="sc2" style="border-color:#e8404a44;cursor:pointer" onclick="filtrarIncompletas()">
+    <div class="sc2" style="border-color:#c11d2a44;cursor:pointer" onclick="filtrarIncompletas()">
       <div class="slbl">⚠️ Sin check out</div>
       <div class="sval" style="color:var(--rd)">${sinSalida}</div>
       <div class="ssub" style="color:var(--rd)">${sinSalida>0?'Clic para ver':'Todo completo ✓'}</div>
@@ -1264,7 +1343,7 @@ function renderResumen(){
     <div class="sc2" style="border-color:#f59e0b44;cursor:pointer" onclick="showView('marcaciones');document.getElementById('f-tipo-marc').value='entrada';renderMarcaciones()">
       <div class="slbl">⚠️ Tardanzas</div><div class="sval" style="color:var(--yw)">${tardanzas}</div><div class="ssub">después de ${HORA_LIMITE_ENTRADA}</div>
     </div>
-    <div class="sc2" style="border-color:#e8404a44;cursor:pointer" onclick="showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones()">
+    <div class="sc2" style="border-color:#c11d2a44;cursor:pointer" onclick="showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones()">
       <div class="slbl">🔴 Alm. excedidos</div><div class="sval" style="color:var(--rd)">${almExcedidos}</div><div class="ssub">más de ${MAX_ALMUERZO_MIN}min</div>
     </div>
     <div class="sc2"><div class="slbl">⏱ Promedio almuerzo</div><div class="sval">${almPromedioMin>0?mToH(almPromedioMin):'—'}</div><div class="ssub">tiempo medio</div></div>`;
@@ -1387,10 +1466,10 @@ function renderAsistencia(){
   const total=persons.length;
   const pct=total>0?Math.round(presentes/total*100):0;
   document.getElementById('asist-stats').innerHTML=`
-    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Presentes</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">${fechas.length} fecha(s)</div></div>
-    <div class="sc2" style="border-color:#e8404a44"><div class="slbl">Ausentes</div><div class="sval" style="color:var(--rd)">${ausentes}</div><div class="ssub">sin marcación</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Presentes</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">${fechas.length} fecha(s)</div></div>
+    <div class="sc2" style="border-color:#c11d2a44"><div class="slbl">Ausentes</div><div class="sval" style="color:var(--rd)">${ausentes}</div><div class="ssub">sin marcación</div></div>
     <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">Horas totales equipo</div><div class="sval" style="color:var(--yw)">${mToH(hrsTotal)}</div><div class="ssub">período seleccionado</div></div>
-    <div class="sc2" style="border-color:${pct>=80?'#2eb872':'#e8404a'}44"><div class="slbl">Cobertura</div><div class="sval" style="color:${ptc(pct)}">${pct}%</div><div class="ssub">${total} personas totales</div></div>`;
+    <div class="sc2" style="border-color:${pct>=80?'#3cb3a8':'#c11d2a'}44"><div class="slbl">Cobertura</div><div class="sval" style="color:${ptc(pct)}">${pct}%</div><div class="ssub">${total} personas totales</div></div>`;
 }
 
 // ── MARCACIONES ───────────────────────────────────────────────────────
@@ -1822,7 +1901,7 @@ function closePanel(){document.getElementById('panel').classList.remove('open');
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function showView(v){
-  ['resumen','asistencia','marcaciones','productividad','pdv','jornadas','ausencias'].forEach(n=>{
+  ['resumen','asistencia','marcaciones','productividad','pdv','jornadas','ausencias','mapa'].forEach(n=>{
     document.getElementById(`view-${n}`).style.display=n===v?'block':'none';
     document.getElementById(`nav-${n}`)?.classList.toggle('active',n===v);
     document.getElementById(`tab-${n}`)?.classList.toggle('active',n===v);
@@ -1830,6 +1909,7 @@ function showView(v){
   if(v==='asistencia')renderAsistencia();
   if(v==='pdv')renderPDV();
   if(v==='ausencias')renderAusencias();
+  if(v==='mapa')renderMapa();
 }
 
 // ── EXPORT CSV ────────────────────────────────────────────────────────
@@ -2022,7 +2102,7 @@ async function generarPPT(){
   const hrsTotal=marcFilt.reduce((s,m)=>s+dToM(m.duracion),0);
   const fechaLabel=fechas.length===1?fechas[0]:fechas[0]+' → '+fechas[fechas.length-1];
   const pct=total>0?Math.round(presentes/total*100):0;
-  const pctColor=pct>=80?'#2eb872':pct>=50?'#f59e0b':'#e8404a';
+  const pctColor=pct>=80?'#3cb3a8':pct>=50?'#f59e0b':'#c11d2a';
 
   let slides=``;
 
@@ -2036,8 +2116,8 @@ async function generarPPT(){
       <div class="cover-date">${fechaLabel}</div>
       <div class="cover-stats">
         ${[
-          {l:'Presentes',v:presentes,c:'#2eb872'},
-          {l:'Ausentes',v:total-presentes,c:'#e8404a'},
+          {l:'Presentes',v:presentes,c:'#3cb3a8'},
+          {l:'Ausentes',v:total-presentes,c:'#c11d2a'},
           {l:'Cobertura',v:pct+'%',c:pctColor},
           {l:'Visitas',v:marcFilt.length,c:'#3b82f6'},
           {l:'Horas totales',v:mToH(hrsTotal),c:'#f59e0b'},
@@ -2055,7 +2135,7 @@ async function generarPPT(){
     const mAus=persMarca.length-mPres;
     const mPct=Math.round(mPres/persMarca.length*100);
     const mHrs=persMarca.reduce((s,p)=>{const mv=porCI[p.ci]||[];return s+mv.reduce((ss,m)=>ss+dToM(m.duracion),0);},0);
-    const mPctColor=mPct>=80?'#2eb872':mPct>=50?'#f59e0b':'#e8404a';
+    const mPctColor=mPct>=80?'#3cb3a8':mPct>=50?'#f59e0b':'#c11d2a';
 
     const tableRows=persMarca.map((p,i)=>{
       const vis=porCI[p.ci]||[];
@@ -2065,14 +2145,14 @@ async function generarPPT(){
       const pdvStr=[...new Set(vis.map(v=>v.pdv))].join(', ');
       const mins=vis.reduce((s,v)=>s+dToM(v.duracion),0);
       const estLabel=present?`✅ ${diasP}/${fechas.length}d`:obs.cat?getCat(obs.cat).label:'❌ Ausente';
-      const estColor=present?'#2eb872':(obs.cat&&!restaProd(obs.cat)?'#8b5cf6':'#e8404a');
+      const estColor=present?'#3cb3a8':(obs.cat&&!restaProd(obs.cat)?'#8b5cf6':'#c11d2a');
       const bg=i%2===0?'#ffffff':'#f7f8fa';
       return`<tr style="background:${bg}">
         <td style="font-family:monospace;font-size:11px;color:#6b7280">${p.ci}</td>
         <td style="font-weight:600;font-size:12px">${p.nombre}</td>
         <td style="font-size:11px;color:${estColor};font-weight:600">${estLabel}</td>
         <td style="font-size:11px;color:#6b7280;text-align:center">${diasP||'0'}</td>
-        <td style="font-size:11px;color:${mins>0?'#2eb872':'#6b7280'};font-weight:${mins>0?'600':'400'}">${mins>0?mToH(mins):'—'}</td>
+        <td style="font-size:11px;color:${mins>0?'#3cb3a8':'#6b7280'};font-weight:${mins>0?'600':'400'}">${mins>0?mToH(mins):'—'}</td>
         <td style="font-size:11px;color:#6b7280;text-align:center">${vis.length||'0'}</td>
         <td style="font-size:11px;color:#6b7280;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${pdvStr}">${pdvStr.slice(0,40)||'—'}</td>
         <td style="font-size:11px;color:#6b7280">${(obs.txt||obs.texto||'').slice(0,25)||''}</td>
@@ -2090,8 +2170,8 @@ async function generarPPT(){
           </div>
           <div class="marca-stats">
             <div class="mstat"><div class="mstat-v">${persMarca.length}</div><div class="mstat-l">Equipo</div></div>
-            <div class="mstat"><div class="mstat-v" style="color:#2eb872">${mPres}</div><div class="mstat-l">Presentes</div></div>
-            <div class="mstat"><div class="mstat-v" style="color:#e8404a">${mAus}</div><div class="mstat-l">Ausentes</div></div>
+            <div class="mstat"><div class="mstat-v" style="color:#3cb3a8">${mPres}</div><div class="mstat-l">Presentes</div></div>
+            <div class="mstat"><div class="mstat-v" style="color:#c11d2a">${mAus}</div><div class="mstat-l">Ausentes</div></div>
             <div class="mstat"><div class="mstat-v" style="color:${mPctColor}">${mPct}%</div><div class="mstat-l">Cobertura</div></div>
             <div class="mstat"><div class="mstat-v" style="color:#f59e0b">${mToH(mHrs)}</div><div class="mstat-l">Horas</div></div>
           </div>
@@ -2117,24 +2197,24 @@ async function generarPPT(){
   body{font-family:'Segoe UI',Arial,sans-serif;background:#e0e0e0;padding:30px;}
   h1,h2{margin:0;}
   .slide{width:1100px;min-height:620px;background:#f0f2f5;margin:0 auto 30px;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;position:relative;}
-  .slide-accent{width:12px;flex-shrink:0;background:#1a1f2e;}
+  .slide-accent{width:12px;flex-shrink:0;background:#c11d2a;}
   .slide-content{flex:1;padding:28px 32px;display:flex;flex-direction:column;}
   /* Cover */
-  .cover-content{background:#1a1f2e;justify-content:center;}
-  .cover-badge{font-size:11px;font-weight:700;color:#2eb872;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+  .cover-content{background:#161414;justify-content:center;}
+  .cover-badge{font-size:11px;font-weight:700;color:#3cb3a8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
   .cover-title{font-size:42px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:14px;letter-spacing:-1px;}
-  .cover-date{font-size:18px;font-weight:600;color:#2eb872;margin-bottom:32px;}
+  .cover-date{font-size:18px;font-weight:600;color:#3cb3a8;margin-bottom:32px;}
   .cover-stats{display:flex;gap:16px;flex-wrap:wrap;}
-  .cstat{background:#252b3d;border:1px solid #2e3650;border-radius:10px;padding:14px 20px;text-align:center;min-width:130px;}
+  .cstat{background:#201d1d;border:1px solid #3a3434;border-radius:10px;padding:14px 20px;text-align:center;min-width:130px;}
   .cstat-val{font-size:26px;font-weight:800;margin-bottom:4px;}
   .cstat-lbl{font-size:11px;color:#8b90a8;text-transform:uppercase;letter-spacing:.5px;}
   /* Slide */
   .slide-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #e8eaed;}
-  .slide-marca{font-size:22px;font-weight:800;color:#1a1f2e;letter-spacing:-.3px;}
+  .slide-marca{font-size:22px;font-weight:800;color:#161414;letter-spacing:-.3px;}
   .slide-fecha{font-size:12px;color:#6b7280;margin-top:3px;}
   .marca-stats{display:flex;gap:10px;}
   .mstat{background:#fff;border:1px solid #e8eaed;border-radius:8px;padding:8px 14px;text-align:center;min-width:70px;}
-  .mstat-v{font-size:18px;font-weight:800;color:#1a1f2e;}
+  .mstat-v{font-size:18px;font-weight:800;color:#161414;}
   .mstat-l{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;}
   .slide-table{width:100%;border-collapse:collapse;font-size:12px;}
   .slide-table thead th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;background:#f7f8fa;border-bottom:2px solid #e8eaed;}
@@ -2169,7 +2249,7 @@ function renderPDV(){
   const totalMins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
   document.getElementById('pdv-stats').innerHTML=`
     <div class="sc2"><div class="slbl">Total visitas</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
-    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${mToH(totalMins)}</div><div class="ssub">con entrada y salida</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${mToH(totalMins)}</div><div class="ssub">con entrada y salida</div></div>
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">PDV únicos</div><div class="sval" style="color:var(--bl)">${new Set(marc.map(m=>m.pdv)).size}</div><div class="ssub">puntos visitados</div></div>
     <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--yw)">${new Set(marc.map(m=>m.ci)).size}</div><div class="ssub">merchants</div></div>`;
   let rows='',thead='';
@@ -2498,9 +2578,9 @@ function poblarJornadas(){
   const totHrs=JDATA.flatMap(e=>e.semanas).reduce((s,sem)=>s+sem.minTotal,0);
   document.getElementById('j-kpis').innerHTML=`
     <div class="sc2"><div class="slbl">Empleados</div><div class="sval">${JDATA.length}</div><div class="ssub">${sems.length} semana(s)</div></div>
-    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${hFmtC(totHrs)}</div><div class="ssub">efectivas calculadas</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${hFmtC(totHrs)}</div><div class="ssub">efectivas calculadas</div></div>
     <div class="sc2" style="border-color:#8b5cf644"><div class="slbl">Horas extra</div><div class="sval" style="color:#8b5cf6">${hFmtC(totExt)}</div><div class="ssub">sobre 8h por día</div></div>
-    <div class="sc2" style="border-color:#e8404a44"><div class="slbl">Días sin salida</div><div class="sval" style="color:var(--rd)">${diasSin}</div><div class="ssub">sin salida válida</div></div>`;
+    <div class="sc2" style="border-color:#c11d2a44"><div class="slbl">Días sin salida</div><div class="sval" style="color:var(--rd)">${diasSin}</div><div class="ssub">sin salida válida</div></div>`;
   document.getElementById('j-kpis').style.display='grid';
 }
 
@@ -2728,9 +2808,9 @@ function renderAusencias(){
   const personas=new Set(filtered.map(a=>a.ci)).size;
 
   document.getElementById('aus-stats').innerHTML=`
-    <div class="sc2" style="border-color:#e8404a44"><div class="slbl">Total ausencias</div><div class="sval" style="color:var(--rd)">${total}</div><div class="ssub">${fechas.length} fecha(s) · ${persons.length} personas</div></div>
+    <div class="sc2" style="border-color:#c11d2a44"><div class="slbl">Total ausencias</div><div class="sval" style="color:var(--rd)">${total}</div><div class="ssub">${fechas.length} fecha(s) · ${persons.length} personas</div></div>
     <div class="sc2"><div class="slbl">Sin categoría</div><div class="sval">${sinCat}</div><div class="ssub">no justificadas</div></div>
-    <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Justificadas</div><div class="sval" style="color:var(--gn)">${justificadas}</div><div class="ssub">reposo, libre, etc.</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Justificadas</div><div class="sval" style="color:var(--gn)">${justificadas}</div><div class="ssub">reposo, libre, etc.</div></div>
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Personas ausentes</div><div class="sval" style="color:var(--bl)">${personas}</div><div class="ssub">personas distintas</div></div>`;
 
   // Sort by clicked column if set, else default fecha+nombre
@@ -2808,12 +2888,170 @@ function exportarAusencias(){
   a.click();
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// MAPA DE COBERTURA Y RECORRIDO
+// ══════════════════════════════════════════════════════════════════════
+let mapaCoberturaLeaflet=null, mapaRecorridoLeaflet=null;
+const TILE_MAPA='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+const TILE_MAPA_DARK='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+function renderMapa(){
+  const fechas=getSelDates('mdd-mapa');
+  const marca=document.getElementById('f-marca-mapa').value;
+  const persona=document.getElementById('f-persona-mapa').value;
+
+  const coberturaWrap=document.getElementById('mapa-cobertura-wrap');
+  const recorridoWrap=document.getElementById('mapa-recorrido-wrap');
+
+  if(persona){
+    coberturaWrap.style.display='none';
+    recorridoWrap.style.display='block';
+    renderRecorridoPersona(persona,fechas,marca);
+  } else {
+    coberturaWrap.style.display='block';
+    recorridoWrap.style.display='none';
+    renderCoberturaGeneral(fechas,marca);
+  }
+}
+
+function renderCoberturaGeneral(fechas,marca){
+  const marc=filtrar({fechas,marca}).filter(m=>m.latIn&&m.lngIn);
+  const conCoord=marc.length;
+  const pdvUnicos=new Set(marc.map(m=>m.pdv)).size;
+  const personasUnicas=new Set(marc.map(m=>m.ci)).size;
+
+  document.getElementById('mapa-stats').innerHTML=`
+    <div class="sc2"><div class="slbl">Con coordenadas</div><div class="sval">${conCoord}</div><div class="ssub">marcaciones mapeables</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">PDV únicos</div><div class="sval" style="color:var(--gn)">${pdvUnicos}</div><div class="ssub">puntos visitados</div></div>
+    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Personas</div><div class="sval" style="color:var(--bl)">${personasUnicas}</div><div class="ssub">con marcaciones geolocalizadas</div></div>`;
+
+  setTimeout(()=>{
+    const mapDiv=document.getElementById('map-cobertura');if(!mapDiv)return;
+    if(mapaCoberturaLeaflet){try{mapaCoberturaLeaflet.remove();}catch(e){}mapaCoberturaLeaflet=null;}
+
+    if(conCoord===0){
+      mapDiv.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--tx2);font-size:13px"><span>📍 Sin coordenadas para el filtro seleccionado</span></div>';
+      return;
+    }
+
+    const isDark=document.body.classList.contains('dark');
+    mapaCoberturaLeaflet=L.map('map-cobertura',{zoomControl:true,attributionControl:false}).setView([-25.3,-57.5],8);
+    L.tileLayer(isDark?TILE_MAPA_DARK:TILE_MAPA,{maxZoom:19}).addTo(mapaCoberturaLeaflet);
+
+    // Group by PDV+coords
+    const pdvMap={};
+    marc.forEach(m=>{
+      const key=`${m.pdv}|${m.latIn}|${m.lngIn}`;
+      if(!pdvMap[key]) pdvMap[key]={pdv:m.pdv,lat:m.latIn,lng:m.lngIn,count:0,personas:new Set()};
+      pdvMap[key].count++;
+      pdvMap[key].personas.add(m.ci);
+    });
+
+    const counts=Object.values(pdvMap).map(p=>p.count);
+    const maxCount=Math.max(...counts,1);
+
+    Object.values(pdvMap).forEach(p=>{
+      const ratio=p.count/maxCount;
+      const color=ratio>0.66?'#c11d2a':ratio>0.33?'#f59e0b':'#3cb3a8';
+      const radius=Math.max(5,Math.min(20,4+p.count*0.6));
+      L.circleMarker([p.lat,p.lng],{radius,fillColor:color,color:'rgba(255,255,255,.6)',weight:1.5,fillOpacity:.8}).addTo(mapaCoberturaLeaflet)
+        .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px;min-width:160px"><b>${p.pdv}</b><br><span style="color:#888">${p.count} visita${p.count!==1?'s':''} · ${p.personas.size} persona${p.personas.size!==1?'s':''}</span></div>`,{maxWidth:240});
+    });
+
+    try{
+      const bounds=L.latLngBounds(marc.map(m=>[m.latIn,m.lngIn]));
+      mapaCoberturaLeaflet.fitBounds(bounds,{padding:[28,28],maxZoom:13});
+    }catch(e){}
+    setTimeout(()=>mapaCoberturaLeaflet&&mapaCoberturaLeaflet.invalidateSize(),150);
+  },80);
+}
+
+function renderRecorridoPersona(persona,fechas,marca){
+  let marc=filtrar({fechas,marca,nombre:persona});
+  marc.sort((a,b)=>{
+    const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};
+    const fd=t(a.fecha).localeCompare(t(b.fecha));
+    return fd!==0?fd:(a.entrada||'')>(b.entrada||'')?1:-1;
+  });
+  const conCoord=marc.filter(m=>m.latIn&&m.lngIn);
+  const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
+  const pdvU=new Set(marc.map(m=>m.pdv)).size;
+  const tardanzas=marc.filter(m=>esTardanza(m.entrada)).length;
+
+  document.getElementById('mapa-stats').innerHTML=`
+    <div class="sc2"><div class="slbl">Marcaciones</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Horas totales</div><div class="sval" style="color:var(--gn)">${mToH(mins)}</div><div class="ssub">${pdvU} PDV únicos</div></div>
+    <div class="sc2" style="border-color:${tardanzas>0?'#c11d2a44':'#3cb3a844'}"><div class="slbl">Tardanzas</div><div class="sval" style="color:${tardanzas>0?'var(--rd)':'var(--gn)'}">${tardanzas}</div><div class="ssub">después de ${HORA_LIMITE_ENTRADA}</div></div>`;
+
+  document.getElementById('reco-info').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--sb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${inits(persona)}</div>
+      <div><div style="font-size:14px;font-weight:700">${persona}</div><div style="font-size:11px;color:var(--tx2)">${marca||'Todas las marcas'}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="reco-stat"><div class="reco-stat-v" style="color:var(--gn)">${marc.length}</div><div class="reco-stat-l">Marcaciones</div></div>
+      <div class="reco-stat"><div class="reco-stat-v" style="color:var(--bl)">${conCoord.length}</div><div class="reco-stat-l">Con GPS</div></div>
+    </div>`;
+
+  document.getElementById('reco-count').textContent=`${marc.length} registros`;
+  document.getElementById('reco-lista').innerHTML=marc.map((m,i)=>{
+    const tarde=esTardanza(m.entrada);
+    const colors=['#c11d2a','#f59e0b','#3b82f6','#3cb3a8','#8b5cf6'];
+    const col=colors[i%colors.length];
+    return`<div class="reco-list-item">
+      <div class="reco-num" style="background:${col}">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.pdv||'—'}</div>
+        <div style="font-size:11px;color:var(--tx2)">${m.fecha}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="mono" style="font-size:11px;color:${tarde?'var(--yw)':'var(--tx2)'}">${m.entrada||'—'}${tarde?' ⚠️':''}</div>
+        <div class="mono" style="font-size:11px;color:var(--tx2)">${m.salida||'—'}</div>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty">Sin marcaciones para este período</div>';
+
+  setTimeout(()=>{
+    const mapDiv=document.getElementById('map-recorrido');if(!mapDiv)return;
+    if(mapaRecorridoLeaflet){try{mapaRecorridoLeaflet.remove();}catch(e){}mapaRecorridoLeaflet=null;}
+
+    if(conCoord.length===0){
+      mapDiv.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--tx2);font-size:13px"><span>📍 Sin coordenadas para este período</span></div>';
+      return;
+    }
+
+    const isDark=document.body.classList.contains('dark');
+    mapaRecorridoLeaflet=L.map('map-recorrido',{zoomControl:true,attributionControl:false}).setView([conCoord[0].latIn,conCoord[0].lngIn],13);
+    L.tileLayer(isDark?TILE_MAPA_DARK:TILE_MAPA,{maxZoom:19}).addTo(mapaRecorridoLeaflet);
+
+    const colors=['#c11d2a','#f59e0b','#3b82f6','#3cb3a8','#8b5cf6'];
+    const latlngs=conCoord.map(m=>[m.latIn,m.lngIn]);
+    L.polyline(latlngs,{color:'#161414',weight:2,opacity:.5,dashArray:'6,5'}).addTo(mapaRecorridoLeaflet);
+
+    conCoord.forEach((m,i)=>{
+      const col=colors[i%colors.length];
+      const icon=L.divIcon({
+        className:'',
+        html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)">${i+1}</div>`,
+        iconSize:[26,26],iconAnchor:[13,13]
+      });
+      L.marker([m.latIn,m.lngIn],{icon}).addTo(mapaRecorridoLeaflet)
+        .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px;min-width:150px"><b>${i+1}. ${m.pdv||'—'}</b><br><span style="color:#888">${m.fecha}</span><br><span style="color:var(--gn)">${m.entrada||'—'}</span> → <span style="color:var(--yw)">${m.salida||'—'}</span></div>`,{maxWidth:220});
+    });
+
+    try{ mapaRecorridoLeaflet.fitBounds(L.latLngBounds(latlngs),{padding:[32,32],maxZoom:15}); }catch(e){}
+    setTimeout(()=>mapaRecorridoLeaflet&&mapaRecorridoLeaflet.invalidateSize(),150);
+  },80);
+}
+
 // ── THEME ─────────────────────────────────────────────────────────────
 function toggleTheme(){
   const dark=document.body.classList.toggle('dark');
   document.getElementById('ticon').textContent=dark?'☀️':'🌙';
   document.getElementById('tlabel').textContent=dark?'Modo claro':'Modo oscuro';
   localStorage.setItem('marka_theme',dark?'dark':'light');
+  // Refresh map tiles if mapa view is currently visible
+  if(document.getElementById('view-mapa').style.display!=='none') renderMapa();
 }
 function applyTheme(){
   if(localStorage.getItem('marka_theme')==='dark'){
