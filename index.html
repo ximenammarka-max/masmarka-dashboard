@@ -119,6 +119,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;l
 .pf{height:100%;border-radius:3px;transition:width .4s;}
 .pf.g{background:var(--gn);}
 .pf.y{background:var(--yw);}
+.pf.o{background:#f97316;}
 .pf.r{background:var(--rd);}
 /* PILLS */
 .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
@@ -330,7 +331,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       </div>
       <div class="ssearch">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="sbsearch" placeholder="Buscar persona..." oninput="filterSB()">
+        <input id="sbsearch" placeholder="Buscar persona, PDV..." oninput="filterSB();globalSearch(this.value)" onfocus="if(this.value)globalSearch(this.value)">
       </div>
     </div>
     <div class="nav">
@@ -356,8 +357,13 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       <div class="ni" id="nav-ausencias" onclick="showView('ausencias')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>Ausencias
       </div>
-      <div class="nsl" style="margin-top:14px">Personas</div>
-      <div id="sbpersons"></div>
+      <div class="nsl" style="margin-top:14px">Alertas</div>
+      <div id="sb-alertas"></div>
+      <div class="nsl" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
+        <span>Favoritos</span>
+        <span style="font-size:9px;color:rgba(255,255,255,.3);text-transform:none;letter-spacing:0">★ para agregar</span>
+      </div>
+      <div id="sb-favoritos"></div>
     </div>
     <div class="sfooter">
       <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px">
@@ -408,6 +414,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
         <select class="fsel" id="f-marca-res" onchange="renderResumen()"><option value="">Todas las marcas</option></select>
       </div>
       <div class="sg" id="res-stats"></div>
+      <div class="sg" id="res-stats2" style="grid-template-columns:repeat(7,1fr);margin-top:-8px"></div>
       <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#e8404a;font-weight:600"></div>
       <div class="twocol">
         <div class="tc"><div class="tch"><span class="tct">Top PDV visitados</span></div><div style="padding:14px" id="chart-pdv"></div></div>
@@ -458,12 +465,22 @@ body.dark .jor-bar-bg{background:var(--sf2);}
         </div>
         <select class="fsel" id="f-marca-marc" onchange="renderMarcaciones()"><option value="">Todas las marcas</option></select>
         <select class="fsel" id="f-persona-marc" onchange="renderMarcaciones()"><option value="">Todas las personas</option></select>
+        <select class="fsel" id="f-tipo-marc" onchange="renderMarcaciones()">
+          <option value="">Todos los tipos</option>
+          <option value="local">📍 Marcaciones de local</option>
+          <option value="entrada">→ Solo entradas</option>
+          <option value="salida">← Solo salidas</option>
+          <option value="almuerzo">🍴 Marcaciones de almuerzo</option>
+          <option value="almuerzo_inicio">🍴→ Solo inicio de almuerzo</option>
+          <option value="almuerzo_fin">🍴← Solo fin de almuerzo</option>
+        </select>
         <input class="finput" id="f-pdv-marc" placeholder="Buscar PDV..." oninput="renderMarcaciones()" style="width:150px">
         <button class="btn btp btsm" onclick="exportarMarcacionesDirecto()">↓ Descargar CSV</button>
       </div>
+      <div id="marc-alertas-bar" style="display:none;margin-bottom:14px"></div>
       <div class="tc">
         <div class="tch"><span class="tct">Marcaciones</span><span class="tcc" id="marc-count"></span></div>
-        <table><thead><tr><th>CI</th><th>Nombre</th><th>Marca</th><th>PDV</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th><th>Obs.</th><th></th></tr></thead>
+        <table><thead id="marc-thead"><tr><th>CI</th><th>Nombre</th><th>Marca</th><th>PDV</th><th>Fecha</th><th>Tipo</th><th>Hora</th><th>Duración</th><th>Estado</th><th>Obs.</th><th></th></tr></thead>
         <tbody id="marc-tbody"></tbody></table>
       </div>
     </div>
@@ -491,7 +508,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
       </div>
       <div class="tc">
         <div class="tch"><span class="tct">Ranking de productividad</span><span class="tcc" id="prod-count"></span></div>
-        <table><thead><tr><th>#</th><th>Nombre</th><th>Marca</th><th>Días / Esp.</th><th>Horas totales</th><th>PDV únicos</th><th>Visitas</th><th>Ausencias justif.</th><th>Cumplimiento</th></tr></thead>
+        <table><thead id="prod-thead"><tr><th>#</th><th>Nombre</th><th>Marca</th><th>Días / Esp.</th><th>Horas totales</th><th>PDV únicos</th><th>Visitas</th><th>Ausencias justif.</th><th>Cumplimiento</th></tr></thead>
         <tbody id="prod-tbody"></tbody></table>
       </div>
     </div>
@@ -589,7 +606,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
           <span class="tcc" id="aus-count"></span>
         </div>
         <table>
-          <thead><tr>
+          <thead id="aus-thead"><tr>
             <th>Fecha</th><th>CI</th><th>Nombre y Apellido</th><th>Marca</th>
             <th>Categoría</th><th>Observación</th><th></th>
           </tr></thead>
@@ -605,7 +622,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
 
 <div class="overlay" id="overlay" onclick="closePanel()"></div>
 <div class="panel" id="panel">
-  <div class="ph2"><div><h2 id="ptitle">—</h2><p id="psub">—</p></div><div class="pc" onclick="closePanel()">✕</div></div>
+  <div class="ph2"><div><h2 id="ptitle">—</h2><p id="psub">—</p></div><div style="display:flex;gap:6px;align-items:center"><span id="pfav-btn" style="display:none;cursor:pointer;font-size:18px;color:#d1d5db" title="Marcar como favorito"></span><div class="pc" onclick="closePanel()">✕</div></div></div>
   <div class="pb2" id="pbody"></div>
   <div class="pf2" id="pfoot" style="display:none">
     <button class="btn bts" onclick="closePanel()">Cancelar</button>
@@ -629,6 +646,7 @@ body.dark .jor-bar-bg{background:var(--sf2);}
   <div class="fld"><label>Formato</label>
     <select class="fsel" id="exp-formato" style="width:100%">
       <option value="honor">Planilla de marcaciones + horas (recomendado)</option>
+      <option value="completo">Entrada + Almuerzo + Salida (un registro por día)</option>
       <option value="detalle">Detalle completo por marcación</option>
       <option value="resumen">Resumen por persona</option>
     </select>
@@ -641,7 +659,22 @@ body.dark .jor-bar-bg{background:var(--sf2);}
 </div>
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────
-const S={personas:[],marcaciones:[],observaciones:{},diasEsperados:22,sheetId:'',apiKey:''};
+const S={personas:[],marcaciones:[],almuerzos:[],observaciones:{},diasEsperados:22,sheetId:'',apiKey:''};
+
+// ── ALERTAS — umbrales ──────────────────────────────────────────────
+const HORA_LIMITE_ENTRADA='08:15'; // tardanza si entrada > esto
+const MAX_ALMUERZO_MIN=60;          // alerta si almuerzo > 60 min
+
+function getAlmuerzosPersona(ci,fecha){
+  return S.almuerzos.filter(a=>a.ci===ci&&a.fecha===fecha);
+}
+function esTardanza(horaEntrada){
+  if(!horaEntrada) return false;
+  return horaEntrada>HORA_LIMITE_ENTRADA;
+}
+function almuerzoExcedido(durMin){
+  return durMin>MAX_ALMUERZO_MIN;
+}
 
 function calcDiasHabiles(year,month){
   const now=new Date();
@@ -773,6 +806,32 @@ async function cargarDatosAPI(){
   const fechasUnicas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   console.log(`[FECHAS CARGADAS] ${S.marcaciones.length} filas, ${fechasUnicas.length} fechas: ${fechasUnicas.join(' | ')}`);
   console.log(`[ULTIMA FECHA] ${fechasUnicas[fechasUnicas.length-1]||'NINGUNA'}`);
+
+  // ── FICHAJES (almuerzos) ─────────────────────────────────────────
+  try{
+    const rF=await fetch(`${base}/Fichajes!A2:G9999${k}`);
+    const dF=await rF.json();
+    if(!dF.error){
+      S.almuerzos=(dF.values||[]).map((r,i)=>{
+        const fechaRaw=(r[0]||'').trim();
+        const ci=String(r[1]||'').trim().split('.')[0];
+        const nombre=(r[2]||'').trim();
+        const marca=(r[3]||'').trim();
+        const pdv=(r[4]||'').trim();
+        const inicio=pH(r[5]||'');
+        const fin=pH(r[6]||'');
+        const fecha=pF(fechaRaw);
+        return{id:i,ci,nombre,marca,pdv,fecha,inicio,fin,duracion:cDur(inicio,fin)};
+      }).filter(a=>a.nombre&&a.fecha);
+      console.log(`[FICHAJES/ALMUERZOS] ${S.almuerzos.length} registros cargados`);
+    } else {
+      S.almuerzos=[];
+      console.log('[FICHAJES] Hoja no encontrada o sin datos:',dF.error.message);
+    }
+  }catch(e){
+    S.almuerzos=[];
+    console.log('[FICHAJES] Error al cargar:',e.message);
+  }
 }
 
 async function recargarDatos(){
@@ -781,7 +840,7 @@ async function recargarDatos(){
 }
 function cargarDemo(){
   S.diasEsperados=calcDiasHabiles();
-  S.personas=DP;S.marcaciones=genDM();iniciarApp();
+  S.personas=DP;S.marcaciones=genDM();S.almuerzos=genDA();iniciarApp();
 }
 function iniciarApp(){
   S.observaciones=JSON.parse(localStorage.getItem('marka_obs')||'{}');
@@ -794,6 +853,7 @@ function iniciarApp(){
   // Close dropdowns on outside click
   document.addEventListener('click',e=>{
     if(!e.target.closest('.multi-date-wrap')) document.querySelectorAll('.multi-date-dropdown').forEach(d=>d.classList.remove('open'));
+    if(!e.target.closest('.ssearch')) document.getElementById('gs-results')?.remove();
   });
 }
 
@@ -861,6 +921,70 @@ function pF(f){
 // Sort DD/MM/YYYY dates correctly
 function sortFechas(arr){ return arr.sort((a,b)=>{const toK=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};return toK(a).localeCompare(toK(b));}); }
 
+// ── GENERIC TABLE SORT STATE ─────────────────────────────────────────
+// Tracks sort column+direction per table id
+const _tblSort={};
+function toggleSort(tblId,col,renderFn){
+  if(!_tblSort[tblId]) _tblSort[tblId]={col:null,dir:1};
+  if(_tblSort[tblId].col===col) _tblSort[tblId].dir*=-1;
+  else { _tblSort[tblId].col=col; _tblSort[tblId].dir=1; }
+  renderFn();
+}
+function sortIcon(tblId,col){
+  const s=_tblSort[tblId];
+  if(!s||s.col!==col) return '<span style="opacity:.25">⇕</span>';
+  return s.dir===1?'<span style="color:var(--ac)">↑</span>':'<span style="color:var(--ac)">↓</span>';
+}
+function applySort(tblId,arr,getters){
+  const s=_tblSort[tblId];
+  if(!s||!s.col||!getters[s.col]) return arr;
+  const get=getters[s.col];
+  return [...arr].sort((a,b)=>{
+    let va=get(a),vb=get(b);
+    if(typeof va==='string') va=va.toLowerCase();
+    if(typeof vb==='string') vb=vb.toLowerCase();
+    if(va<vb) return -1*s.dir;
+    if(va>vb) return 1*s.dir;
+    return 0;
+  });
+}
+function thSort(tblId,col,label,renderFnName){
+  return `<th style="cursor:pointer;user-select:none" onclick="toggleSort('${tblId}','${col}',${renderFnName})">${label} ${sortIcon(tblId,col)}</th>`;
+}
+
+// ── GLOBAL SEARCH ─────────────────────────────────────────────────────
+function globalSearch(q){
+  q=(q||'').trim().toLowerCase();
+  if(!q){document.getElementById('gs-results')?.remove();return;}
+  const results=[];
+  // Search personas
+  S.personas.forEach(p=>{
+    if(p.nombre.toLowerCase().includes(q)||p.ci.includes(q))
+      results.push({tipo:'persona',label:p.nombre,sub:`${p.marca} · CI ${p.ci}`,action:`openPersona('${p.ci}')`});
+  });
+  // Search PDV
+  const pdvSet=new Set();
+  S.marcaciones.forEach(m=>{if(m.pdv.toLowerCase().includes(q)&&!pdvSet.has(m.pdv)){pdvSet.add(m.pdv);results.push({tipo:'pdv',label:m.pdv,sub:'Punto de venta',action:`showView('pdv');document.getElementById('f-buscar-pdv').value='${m.pdv.replace(/'/g,"\\'")}';renderPDV();`});}});
+  showGSResults(results.slice(0,12),q);
+}
+function showGSResults(results,q){
+  let panel=document.getElementById('gs-results');
+  const input=document.getElementById('sbsearch');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='gs-results';
+    panel.style.cssText='position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:var(--shm);z-index:60;max-height:320px;overflow-y:auto;margin-top:4px;';
+    input.closest('.ssearch').style.position='relative';
+    input.closest('.ssearch').appendChild(panel);
+  }
+  if(results.length===0){panel.innerHTML='<div style="padding:14px;font-size:12px;color:var(--tx2);text-align:center">Sin resultados para "'+q+'"</div>';return;}
+  panel.innerHTML=results.map(r=>`
+    <div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--bd);transition:background .1s" onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background=''" onclick="${r.action};document.getElementById('gs-results').remove();document.getElementById('sbsearch').value='';">
+      <div style="font-size:12px;font-weight:600;color:var(--tx)">${r.tipo==='pdv'?'📍 ':'👤 '}${r.label}</div>
+      <div style="font-size:11px;color:var(--tx2)">${r.sub}</div>
+    </div>`).join('');
+}
+
 function cDur(e,s){
   if(!e||!s)return '';
   const[eh,em]=e.split(':').map(Number),[sh,sm]=s.split(':').map(Number);
@@ -877,6 +1001,10 @@ function sDO(ci,f,cat,txt){S.observaciones[`day_${ci}_${f}`]={cat,txt};persist()
 function persist(){localStorage.setItem('marka_obs',JSON.stringify(S.observaciones));}
 function pc(pct){return pct>=80?'g':pct>=50?'y':'r';}
 function ptc(pct){return pct>=80?'var(--gn)':pct>=50?'var(--yw)':'var(--rd)';}
+// Granular 4-level color: 🟢🟡🟠🔴
+function pc4(pct){return pct>=90?'g':pct>=70?'y':pct>=40?'o':'r';}
+function ptc4(pct){return pct>=90?'var(--gn)':pct>=70?'var(--yw)':pct>=40?'#f97316':'var(--rd)';}
+function pemoji4(pct){return pct>=90?'🟢':pct>=70?'🟡':pct>=40?'🟠':'🔴';}
 
 // Get selected dates from a multi-date dropdown
 function getSelDates(ddId){
@@ -972,7 +1100,7 @@ function triggerViewRender(ddId){
 
 // ── FILTERS POPULATION ────────────────────────────────────────────────
 function poblarFiltros(){
-  const fechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  const fechas=sortFechas([...new Set([...S.marcaciones.map(m=>m.fecha),...(S.almuerzos||[]).map(a=>a.fecha)])]);
   const marcas=[...new Set([...S.personas.map(p=>p.marca),...S.marcaciones.map(m=>m.marca)])].sort();
   const personas=[...new Set(S.marcaciones.map(m=>m.nombre))].sort();
 
@@ -1022,18 +1150,71 @@ function poblarFiltros(){
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────────────
+// ── FAVORITOS ─────────────────────────────────────────────────────────
+function getFavoritos(){return JSON.parse(localStorage.getItem('marka_favoritos')||'[]');}
+function toggleFavorito(ci){
+  let favs=getFavoritos();
+  if(favs.includes(ci)) favs=favs.filter(f=>f!==ci);
+  else favs.push(ci);
+  localStorage.setItem('marka_favoritos',JSON.stringify(favs));
+  renderSBP();
+}
+function esFavorito(ci){return getFavoritos().includes(ci);}
+
 function renderSBP(q=''){
-  const el=document.getElementById('sbpersons');
-  const ps=S.personas.filter(p=>!q||p.nombre.toLowerCase().includes(q.toLowerCase())||p.ci.includes(q));
-  el.innerHTML=ps.slice(0,25).map(p=>{
+  renderSBAlertas();
+  renderSBFavoritos();
+}
+
+function renderSBAlertas(){
+  const el=document.getElementById('sb-alertas');if(!el)return;
+  const hoy=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]).slice(-1)[0];
+  if(!hoy){el.innerHTML='<div style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.3)">Sin datos</div>';return;}
+
+  const marcHoy=S.marcaciones.filter(m=>m.fecha===hoy);
+  const almHoy=S.almuerzos.filter(a=>a.fecha===hoy);
+  const tardanzas=marcHoy.filter(m=>esTardanza(m.entrada));
+  const sinCheckout=marcHoy.filter(m=>m.entrada&&!m.salida);
+  const almExcedidos=almHoy.filter(a=>a.fin&&almuerzoExcedido(dToM(a.duracion)));
+
+  const items=[];
+  if(tardanzas.length>0) items.push({icon:'⚠️',label:`${tardanzas.length} tardanza${tardanzas.length!==1?'s':''}`,color:'#f59e0b',action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='entrada';renderMarcaciones();`});
+  if(sinCheckout.length>0) items.push({icon:'🔴',label:`${sinCheckout.length} sin check out`,color:'#e8404a',action:`filtrarIncompletas();`});
+  if(almExcedidos.length>0) items.push({icon:'🍴',label:`${almExcedidos.length} almuerzo${almExcedidos.length!==1?'s':''} excedido${almExcedidos.length!==1?'s':''}`,color:'#e8404a',action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones();`});
+
+  if(items.length===0){
+    el.innerHTML='<div style="padding:8px 10px;font-size:11px;color:rgba(46,184,114,.7);display:flex;align-items:center;gap:6px">✓ Todo en orden hoy</div>';
+    return;
+  }
+  el.innerHTML=items.map(it=>`
+    <div class="ni" onclick="${it.action}" style="cursor:pointer">
+      <span style="font-size:13px">${it.icon}</span>
+      <span style="font-size:12px;color:rgba(255,255,255,.75);flex:1">${it.label}</span>
+    </div>`).join('');
+}
+
+function renderSBFavoritos(){
+  const el=document.getElementById('sb-favoritos');if(!el)return;
+  const favs=getFavoritos();
+  const personas=S.personas.filter(p=>favs.includes(p.ci));
+  if(personas.length===0){
+    el.innerHTML='<div style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.3)">Sin favoritos aún</div>';
+    return;
+  }
+  el.innerHTML=personas.map(p=>{
     const st=getStats(p.ci);const pct=st.cumplimiento;
-    return`<div class="ni" onclick="openPersona('${p.ci}')">
-      <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${inits(p.nombre)}</div>
-      <div style="min-width:0;flex:1"><div style="font-size:12px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre.split(' ').slice(0,2).join(' ')}</div><div style="font-size:10px;color:rgba(255,255,255,.4)">${p.marca}</div></div>
-      <span style="font-size:10px;font-weight:700;color:${ptc(pct)}">${pct}%</span></div>`;
+    return`<div class="ni" style="position:relative">
+      <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer" onclick="openPersona('${p.ci}')">${inits(p.nombre)}</div>
+      <div style="min-width:0;flex:1;cursor:pointer" onclick="openPersona('${p.ci}')"><div style="font-size:12px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre.split(' ').slice(0,2).join(' ')}</div><div style="font-size:10px;color:rgba(255,255,255,.4)">${p.marca}</div></div>
+      <span style="font-size:10px;font-weight:700;color:${ptc4(pct)}">${pct}%</span>
+      <span onclick="toggleFavorito('${p.ci}')" style="cursor:pointer;font-size:12px;color:#fbbf24;margin-left:2px" title="Quitar de favoritos">★</span>
+    </div>`;
   }).join('');
 }
-function filterSB(){renderSBP(document.getElementById('sbsearch').value);}
+function filterSB(){
+  const q=document.getElementById('sbsearch').value;
+  // Search now handled by globalSearch dropdown; keep this for legacy calls
+}
 
 // ── RENDER ALL ────────────────────────────────────────────────────────
 function renderAll(){renderResumen();renderAsistencia();renderMarcaciones();renderProductividad();}
@@ -1043,10 +1224,26 @@ function renderResumen(){
   const fechas=getSelDates('mdd-res');
   const marca=document.getElementById('f-marca-res').value;
   const marc=filtrar({fechas,marca});
+  const almF=S.almuerzos.filter(a=>{
+    if(fechas&&fechas.length&&!fechas.includes(a.fecha))return false;
+    if(marca&&a.marca!==marca)return false;
+    return true;
+  });
   const presentes=new Set(marc.map(m=>m.ci)).size;
   const pdvU=new Set(marc.map(m=>m.pdv)).size;
   const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
   const sinSalida=marc.filter(m=>m.entrada&&!m.salida).length;
+
+  // New indicators
+  const entradas=marc.filter(m=>m.entrada).length;
+  const salidas=marc.filter(m=>m.salida).length;
+  const almInicios=almF.filter(a=>a.inicio).length;
+  const almFines=almF.filter(a=>a.fin).length;
+  const tardanzas=marc.filter(m=>esTardanza(m.entrada)).length;
+  const almExcedidosArr=almF.filter(a=>a.fin&&almuerzoExcedido(dToM(a.duracion)));
+  const almExcedidos=almExcedidosArr.length;
+  const almConDuracion=almF.filter(a=>a.fin&&a.duracion);
+  const almPromedioMin=almConDuracion.length>0?Math.round(almConDuracion.reduce((s,a)=>s+dToM(a.duracion),0)/almConDuracion.length):0;
 
   document.getElementById('res-stats').innerHTML=`
     <div class="sc2"><div class="slbl">Marcaciones</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
@@ -1057,6 +1254,20 @@ function renderResumen(){
       <div class="sval" style="color:var(--rd)">${sinSalida}</div>
       <div class="ssub" style="color:var(--rd)">${sinSalida>0?'Clic para ver':'Todo completo ✓'}</div>
     </div>`;
+
+  // Second row: entradas/salidas/almuerzos/tardanzas
+  document.getElementById('res-stats2').innerHTML=`
+    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">→ Entradas</div><div class="sval" style="color:var(--bl)">${entradas}</div><div class="ssub">registradas</div></div>
+    <div class="sc2"><div class="slbl">← Salidas</div><div class="sval">${salidas}</div><div class="ssub">registradas</div></div>
+    <div class="sc2" style="border-color:#8b5cf644"><div class="slbl">🍴 Alm. iniciados</div><div class="sval" style="color:var(--pu)">${almInicios}</div><div class="ssub">del período</div></div>
+    <div class="sc2" style="border-color:#8b5cf644"><div class="slbl">🍴 Alm. finalizados</div><div class="sval" style="color:var(--pu)">${almFines}</div><div class="ssub">del período</div></div>
+    <div class="sc2" style="border-color:#f59e0b44;cursor:pointer" onclick="showView('marcaciones');document.getElementById('f-tipo-marc').value='entrada';renderMarcaciones()">
+      <div class="slbl">⚠️ Tardanzas</div><div class="sval" style="color:var(--yw)">${tardanzas}</div><div class="ssub">después de ${HORA_LIMITE_ENTRADA}</div>
+    </div>
+    <div class="sc2" style="border-color:#e8404a44;cursor:pointer" onclick="showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones()">
+      <div class="slbl">🔴 Alm. excedidos</div><div class="sval" style="color:var(--rd)">${almExcedidos}</div><div class="ssub">más de ${MAX_ALMUERZO_MIN}min</div>
+    </div>
+    <div class="sc2"><div class="slbl">⏱ Promedio almuerzo</div><div class="sval">${almPromedioMin>0?mToH(almPromedioMin):'—'}</div><div class="ssub">tiempo medio</div></div>`;
 
   const pdvC={},mC={};
   marc.forEach(m=>{pdvC[m.pdv]=(pdvC[m.pdv]||0)+1;mC[m.marca]=(mC[m.marca]||0)+1;});
@@ -1078,8 +1289,8 @@ function renderResumen(){
         <span class="pill pgr">— ${S.diasEsperados-st.dias} s/registrar</span>
         ${st.totalMins>0?`<span class="pill pbl">${st.horas}</span>`:''}
       </div>
-      <div class="pcpl"><span>Cobertura</span><strong>${pct}%</strong></div>
-      <div class="pb"><div class="pf ${pc(pct)}" style="width:${pct}%"></div></div>
+      <div class="pcpl"><span>Cobertura</span><strong style="color:${ptc4(pct)}">${pemoji4(pct)} ${pct}%</strong></div>
+      <div class="pb"><div class="pf ${pc4(pct)}" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
 }
@@ -1203,39 +1414,116 @@ function renderMarcaciones(){
   const marca=document.getElementById('f-marca-marc').value;
   const persona=document.getElementById('f-persona-marc').value;
   const pdvq=document.getElementById('f-pdv-marc').value;
-  let marc=filtrar({fechas,marca,nombre:persona,pdv:pdvq});
+  const tipo=document.getElementById('f-tipo-marc').value;
+
+  let marcLocal=filtrar({fechas,marca,nombre:persona,pdv:pdvq});
+  let almLocal=S.almuerzos.filter(a=>{
+    if(fechas&&fechas.length&&!fechas.includes(a.fecha))return false;
+    if(marca&&a.marca!==marca)return false;
+    if(persona&&a.nombre!==persona)return false;
+    if(pdvq&&!a.pdv.toLowerCase().includes(pdvq.toLowerCase()))return false;
+    return true;
+  });
 
   const soloInc=S._soloIncompletas||false;
-  if(soloInc) marc=marc.filter(m=>m.entrada&&!m.salida);
+  if(soloInc){ marcLocal=marcLocal.filter(m=>m.entrada&&!m.salida); almLocal=[]; }
 
-  const sinSalida=marc.filter(m=>m.entrada&&!m.salida).length;
+  // Build unified row list based on tipo filter
+  let rowsData=[];
 
-  // Show alert banner if there are incomplete
-  const banner=sinSalida>0&&!soloInc?`
-    <div style="background:#fdecea;border:1px solid #e8404a44;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:13px;color:#e8404a;font-weight:600">⚠️ ${sinSalida} marcación${sinSalida!==1?'es':''} sin check out</span>
-      <button class="btn btsm" style="background:#e8404a;color:#fff;border:none;font-size:12px" onclick="S._soloIncompletas=true;renderMarcaciones()">Ver solo incompletas</button>
-    </div>`:'';
+  const incluyeLocal = !tipo||tipo==='local'||tipo==='entrada'||tipo==='salida';
+  const incluyeAlmuerzo = !tipo||tipo==='almuerzo'||tipo==='almuerzo_inicio'||tipo==='almuerzo_fin';
+
+  if(incluyeLocal){
+    marcLocal.forEach(m=>{
+      const incompleta=m.entrada&&!m.salida;
+      const tarde=esTardanza(m.entrada);
+      if(tipo==='entrada'||tipo==='local'||!tipo){
+        rowsData.push({kind:'entrada',ci:m.ci,nombre:m.nombre,marca:m.marca,pdv:m.pdv,fecha:m.fecha,hora:m.entrada,obsId:m.id,
+          estado: tarde?'tardanza':'ok', estadoLabel: tarde?`⚠️ Tarde (>${HORA_LIMITE_ENTRADA})`:'✓ A tiempo'});
+      }
+      if((tipo==='salida'||tipo==='local'||!tipo)&&(m.salida||incompleta)){
+        rowsData.push({kind:'salida',ci:m.ci,nombre:m.nombre,marca:m.marca,pdv:m.pdv,fecha:m.fecha,hora:m.salida,duracion:m.duracion,obsId:m.id,
+          estado: incompleta?'sin_checkout':'ok', estadoLabel: incompleta?'⚠️ Sin check out':(m.duracion||'')});
+      }
+    });
+  }
+
+  if(incluyeAlmuerzo){
+    almLocal.forEach(a=>{
+      const durMin=dToM(a.duracion);
+      const excedido=a.fin&&almuerzoExcedido(durMin);
+      if(tipo==='almuerzo_inicio'||tipo==='almuerzo'||!tipo){
+        rowsData.push({kind:'alm_inicio',ci:a.ci,nombre:a.nombre,marca:a.marca,pdv:a.pdv,fecha:a.fecha,hora:a.inicio,obsId:'alm_'+a.id,
+          estado:'ok', estadoLabel:'🍴 Inicio almuerzo'});
+      }
+      if((tipo==='almuerzo_fin'||tipo==='almuerzo'||!tipo)&&a.fin){
+        rowsData.push({kind:'alm_fin',ci:a.ci,nombre:a.nombre,marca:a.marca,pdv:a.pdv,fecha:a.fecha,hora:a.fin,duracion:a.duracion,obsId:'alm_'+a.id,
+          estado: excedido?'almuerzo_excedido':'ok',
+          estadoLabel: excedido?`🔴 Excedió 60min (${a.duracion})`:`✓ ${a.duracion||''}`});
+      }
+    });
+  }
+
+  // Sort: by clicked column if set, else default fecha+hora
+  document.getElementById('marc-thead').innerHTML='<tr>'+
+    thSort('marc','ci','CI','renderMarcaciones')+
+    thSort('marc','nombre','Nombre','renderMarcaciones')+
+    '<th>Marca</th>'+thSort('marc','pdv','PDV','renderMarcaciones')+
+    thSort('marc','fecha','Fecha','renderMarcaciones')+
+    '<th>Tipo</th>'+thSort('marc','hora','Hora','renderMarcaciones')+
+    '<th>Duración</th><th>Estado</th><th>Obs.</th><th></th></tr>';
+
+  if(_tblSort.marc&&_tblSort.marc.col){
+    const getters={ci:r=>r.ci,nombre:r=>r.nombre,pdv:r=>r.pdv,fecha:r=>{const p=r.fecha.split('/');return p[2]+p[1]+p[0];},hora:r=>r.hora||''};
+    rowsData=applySort('marc',rowsData,getters);
+  } else {
+    rowsData.sort((a,b)=>{
+      const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};
+      const fd=t(a.fecha).localeCompare(t(b.fecha));
+      return fd!==0?fd:(a.hora||'')>(b.hora||'')?1:(a.hora||'')<(b.hora||'')?-1:0;
+    });
+  }
+
+  // Alerts summary
+  const tardanzas=rowsData.filter(r=>r.estado==='tardanza').length;
+  const sinCheckout=rowsData.filter(r=>r.estado==='sin_checkout').length;
+  const almExcedidos=rowsData.filter(r=>r.estado==='almuerzo_excedido').length;
+
+  const alertasBar=document.getElementById('marc-alertas-bar');
+  if(tardanzas>0||sinCheckout>0||almExcedidos>0){
+    alertasBar.style.display='flex';
+    alertasBar.style.gap='8px';
+    alertasBar.style.flexWrap='wrap';
+    alertasBar.innerHTML=`
+      ${tardanzas>0?`<span class="pill py" style="padding:6px 12px;font-size:12px">⚠️ ${tardanzas} tardanza${tardanzas!==1?'s':''}</span>`:''}
+      ${sinCheckout>0?`<span class="pill pr" style="padding:6px 12px;font-size:12px;cursor:pointer" onclick="S._soloIncompletas=true;renderMarcaciones()">⚠️ ${sinCheckout} sin check out</span>`:''}
+      ${almExcedidos>0?`<span class="pill pr" style="padding:6px 12px;font-size:12px">🔴 ${almExcedidos} almuerzo${almExcedidos!==1?'s':''} excedido${almExcedidos!==1?'s':''}</span>`:''}
+    `;
+  } else { alertasBar.style.display='none'; }
 
   const filterBanner=soloInc?`
     <div style="background:#fef3c7;border:1px solid #f59e0b44;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:13px;color:#d97706;font-weight:600">⚠️ Mostrando solo marcaciones sin check out (${marc.length})</span>
+      <span style="font-size:13px;color:#d97706;font-weight:600">⚠️ Mostrando solo marcaciones sin check out</span>
       <button class="btn btsm bts" onclick="S._soloIncompletas=false;renderMarcaciones()">✕ Mostrar todas</button>
     </div>`:'';
 
-  const rows=marc.map(m=>{
-    const obs=getObs(m.id);
-    const incompleta=m.entrada&&!m.salida;
-    return`<tr style="${incompleta?'background:#fff8f8':''}">
-      <td class="mono">${m.ci}</td><td style="font-weight:600">${m.nombre}</td>
-      <td><span class="pill pdk" style="font-size:11px">${m.marca}</span></td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.pdv}</td>
-      <td class="mono">${m.fecha}</td>
-      <td class="mono">${m.entrada||'—'}</td>
-      <td class="mono">${incompleta?'<span style="color:#e8404a;font-weight:600">⚠️ Sin check out</span>':m.salida||'—'}</td>
-      <td class="mono">${m.duracion||'—'}</td>
+  const TIPO_LABELS={entrada:'→ Entrada',salida:'← Salida',alm_inicio:'🍴→ Inicio almuerzo',alm_fin:'🍴← Fin almuerzo'};
+  const ROW_BG={tardanza:'background:#fffbeb',sin_checkout:'background:#fff8f8',almuerzo_excedido:'background:#fff1f0'};
+
+  const rows=rowsData.map(r=>{
+    const obs=r.obsId.toString().startsWith('alm_')?{cat:'',txt:''}:getObs(r.obsId);
+    return`<tr style="${ROW_BG[r.estado]||''}">
+      <td class="mono">${r.ci}</td><td style="font-weight:600">${r.nombre}</td>
+      <td><span class="pill pdk" style="font-size:11px">${r.marca}</span></td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.pdv}</td>
+      <td class="mono">${r.fecha}</td>
+      <td><span class="pill ${r.kind.startsWith('alm')?'ppu':'pbl'}" style="font-size:11px">${TIPO_LABELS[r.kind]}</span></td>
+      <td class="mono">${r.hora||'—'}</td>
+      <td class="mono">${r.duracion||'—'}</td>
+      <td style="font-size:12px;font-weight:600;color:${r.estado==='tardanza'?'var(--yw)':r.estado==='sin_checkout'||r.estado==='almuerzo_excedido'?'var(--rd)':'var(--gn)'}">${r.estadoLabel||''}</td>
       <td>${obs.cat?catPill(obs.cat):''}</td>
-      <td><button class="btn bts btsm" onclick="openMarcacion(${m.id})">Ver</button></td>
+      <td>${r.kind.startsWith('alm')?'':`<button class="btn bts btsm" onclick="openMarcacion(${r.obsId})">Ver</button>`}</td>
     </tr>`;
   }).join('');
 
@@ -1243,10 +1531,10 @@ function renderMarcaciones(){
   const tableCard=document.querySelector('#view-marcaciones .tc');
   let bannerEl=document.getElementById('marc-banner');
   if(!bannerEl){bannerEl=document.createElement('div');bannerEl.id='marc-banner';tableCard.parentNode.insertBefore(bannerEl,tableCard);}
-  bannerEl.innerHTML=filterBanner+banner;
+  bannerEl.innerHTML=filterBanner;
 
-  document.getElementById('marc-tbody').innerHTML=rows||'<tr><td colspan="10" class="empty">Sin marcaciones</td></tr>';
-  document.getElementById('marc-count').textContent=`${marc.length} registros${soloInc?' (incompletas)':''}`;
+  document.getElementById('marc-tbody').innerHTML=rows||'<tr><td colspan="11" class="empty">Sin marcaciones</td></tr>';
+  document.getElementById('marc-count').textContent=`${rowsData.length} registros`;
 }
 
 // ── PRODUCTIVIDAD ─────────────────────────────────────────────────────
@@ -1260,8 +1548,30 @@ function renderProductividad(){
     if(buscar&&!p.nombre.toLowerCase().includes(buscar)&&!p.ci.includes(buscar))return false;
     return true;
   });
-  const data=personas.map(p=>({...p,...getStats(p.ci,fechas)}));
-  data.sort((a,b)=>orden==='horas'?b.totalMins-a.totalMins:orden==='visitas'?b.visitas-a.visitas:orden==='pdv'?b.pdvUnicos-a.pdvUnicos:b.cumplimiento-a.cumplimiento);
+  let data=personas.map(p=>({...p,...getStats(p.ci,fechas)}));
+
+  // Render sortable thead
+  const cols=[
+    {key:'nombre',label:'Nombre',get:p=>p.nombre},
+    {key:'marca',label:'Marca',get:p=>p.marca},
+    {key:'dias',label:'Días / Esp.',get:p=>p.dias},
+    {key:'horas',label:'Horas totales',get:p=>p.totalMins},
+    {key:'pdv',label:'PDV únicos',get:p=>p.pdvUnicos},
+    {key:'visitas',label:'Visitas',get:p=>p.visitas},
+  ];
+  const getters={};cols.forEach(c=>getters[c.key]=c.get);
+  getters.cumpl=p=>p.cumplimiento;
+  document.getElementById('prod-thead').innerHTML='<tr><th>#</th>'+
+    cols.map(c=>thSort('prod',c.key,c.label,'renderProductividad')).join('')+
+    '<th>Ausencias justif.</th>'+thSort('prod','cumpl','Cumplimiento','renderProductividad')+'</tr>';
+
+  // If a column was clicked, that takes priority over the dropdown
+  if(_tblSort.prod&&_tblSort.prod.col){
+    data=applySort('prod',data,getters);
+  } else {
+    data.sort((a,b)=>orden==='horas'?b.totalMins-a.totalMins:orden==='visitas'?b.visitas-a.visitas:orden==='pdv'?b.pdvUnicos-a.pdvUnicos:b.cumplimiento-a.cumplimiento);
+  }
+
   const rows=data.map((p,i)=>{
     const pct=p.cumplimiento;
     return`<tr style="cursor:pointer" onclick="openPersona('${p.ci}')">
@@ -1272,7 +1582,7 @@ function renderProductividad(){
       <td class="mono" style="font-weight:600;color:var(--gn)">${p.horas||'0m'}</td>
       <td class="mono">${p.pdvUnicos}</td><td class="mono">${p.visitas}</td>
       <td class="mono">${p.ausJust>0?`<span class="pill py">${p.ausJust} justif.</span>`:p.ausTot>0?`<span class="pill pr">${p.ausTot} aus.</span>`:'—'}</td>
-      <td style="min-width:140px"><div class="pgr2"><div class="pt"><div class="ppf ${pc(pct)}" style="width:${pct}%;background:${ptc(pct)}"></div></div><span class="pp" style="color:${ptc(pct)}">${pct}%</span></div></td>
+      <td style="min-width:150px"><div class="pgr2"><div class="pt"><div class="ppf ${pc4(pct)}" style="width:${pct}%;background:${ptc4(pct)}"></div></div><span class="pp" style="color:${ptc4(pct)}">${pemoji4(pct)} ${pct}%</span></div></td>
     </tr>`;
   }).join('');
   document.getElementById('prod-tbody').innerHTML=rows||'<tr><td colspan="9" class="empty">Sin datos</td></tr>';
@@ -1307,6 +1617,11 @@ function openPersona(ci){
 
   document.getElementById('ptitle').textContent=p.nombre;
   document.getElementById('psub').textContent=p.marca+' · CI: '+p.ci;
+  const favBtn=document.getElementById('pfav-btn');
+  favBtn.style.display='inline';
+  favBtn.textContent=esFavorito(ci)?'★':'☆';
+  favBtn.style.color=esFavorito(ci)?'#fbbf24':'#d1d5db';
+  favBtn.onclick=()=>{toggleFavorito(ci);favBtn.textContent=esFavorito(ci)?'★':'☆';favBtn.style.color=esFavorito(ci)?'#fbbf24':'#d1d5db';};
   document.getElementById('pbody').innerHTML=`
     <div class="ps">
       <div class="pst">Resumen del período</div>
@@ -1329,6 +1644,7 @@ function openPersona(ci){
 }
 
 function openMarcacion(id){
+  document.getElementById('pfav-btn').style.display='none';
   const m=S.marcaciones.find(x=>x.id===id);if(!m)return;
   const obs=getObs(id);
   document.getElementById('ptitle').textContent=m.pdv||'Marcación';
@@ -1361,6 +1677,7 @@ function openMarcacion(id){
 }
 
 function openObsDia(ci,nombre,marca,fechasStr){
+  document.getElementById('pfav-btn').style.display='none';
   const fechas=fechasStr.split(',');
   const primera=fechas[0];
   const obs=getDO(ci,primera);
@@ -1525,16 +1842,45 @@ function exportarMarcacionesDirecto(){
   const marca=document.getElementById('f-marca-marc').value;
   const persona=document.getElementById('f-persona-marc').value;
   const pdvq=document.getElementById('f-pdv-marc').value;
+  const tipo=document.getElementById('f-tipo-marc').value;
+
   let marc=filtrar({fechas,marca,nombre:persona,pdv:pdvq});
   if(S._soloIncompletas) marc=marc.filter(m=>m.entrada&&!m.salida);
-  // Sort by fecha then entrada
-  marc.sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};const fd=t(a.fecha).localeCompare(t(b.fecha));return fd!==0?fd:(a.entrada||'')>(b.entrada||'')?1:-1;});
-  const sep=';';
-  let csv=['CI','Nombre y Apellido','Marca','PDV','Fecha','Entrada','Salida','Duración','Categoría','Observación'].join(sep)+'\n';
-  marc.forEach(m=>{
-    const o=getObs(m.id);
-    csv+=[m.ci,m.nombre,m.marca,m.pdv,m.fecha,m.entrada||'',m.salida||'',m.duracion||'',o.cat||'',(o.txt||o.texto||'').replace(/;/g,',')].join(sep)+'\n';
+  let alm=S.almuerzos.filter(a=>{
+    if(fechas&&fechas.length&&!fechas.includes(a.fecha))return false;
+    if(marca&&a.marca!==marca)return false;
+    if(persona&&a.nombre!==persona)return false;
+    if(pdvq&&!a.pdv.toLowerCase().includes(pdvq.toLowerCase()))return false;
+    return true;
   });
+
+  const incluyeLocal = !tipo||tipo==='local'||tipo==='entrada'||tipo==='salida';
+  const incluyeAlmuerzo = !tipo||tipo==='almuerzo'||tipo==='almuerzo_inicio'||tipo==='almuerzo_fin';
+  if(!incluyeLocal) marc=[];
+  if(!incluyeAlmuerzo) alm=[];
+
+  const sep=';';
+  let csv=['CI','Nombre y Apellido','Marca','PDV','Fecha','Tipo','Hora','Duración','Estado','Categoría','Observación'].join(sep)+'\n';
+
+  let rowsData=[];
+  marc.forEach(m=>{
+    const tarde=esTardanza(m.entrada);
+    if(!tipo||tipo==='local'||tipo==='entrada') if(m.entrada) rowsData.push({...m,kind:'Entrada',hora:m.entrada,dur:'',estado:tarde?'TARDANZA':'OK',obsId:m.id});
+    if(!tipo||tipo==='local'||tipo==='salida') if(m.salida||(m.entrada&&!m.salida)) rowsData.push({...m,kind:'Salida',hora:m.salida,dur:m.duracion,estado:m.entrada&&!m.salida?'SIN CHECKOUT':'OK',obsId:m.id});
+  });
+  alm.forEach(a=>{
+    const excedido=a.fin&&almuerzoExcedido(dToM(a.duracion));
+    if(!tipo||tipo==='almuerzo'||tipo==='almuerzo_inicio') rowsData.push({...a,kind:'Inicio Almuerzo',hora:a.inicio,dur:'',estado:'OK',obsId:null});
+    if((!tipo||tipo==='almuerzo'||tipo==='almuerzo_fin')&&a.fin) rowsData.push({...a,kind:'Fin Almuerzo',hora:a.fin,dur:a.duracion,estado:excedido?'EXCEDIDO':'OK',obsId:null});
+  });
+
+  rowsData.sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};const fd=t(a.fecha).localeCompare(t(b.fecha));return fd!==0?fd:(a.hora||'')>(b.hora||'')?1:-1;});
+
+  rowsData.forEach(r=>{
+    const o=r.obsId!=null?getObs(r.obsId):{cat:'',txt:''};
+    csv+=[r.ci,r.nombre,r.marca,r.pdv,r.fecha,r.kind,r.hora||'',r.dur||'',r.estado,o.cat||'',(o.txt||o.texto||'').replace(/;/g,',')].join(sep)+'\n';
+  });
+
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1574,6 +1920,51 @@ function exportarCSV(){
         aus++;return '';
       });
       csv+=[p.nombre,p.ci,p.marca,'MERCHANT',...dateCells,pres,aus,libre,rep,st.horas||'0m',st.cumplimiento+'%'].join(sep)+'\n';
+    });
+  } else if(fmt==='completo'){
+    // Fecha, Merchant, Hora Entrada, Hora Inicio Almuerzo, Hora Fin Almuerzo, Hora Salida, Duración Almuerzo, Observaciones
+    const fechasFiltro=getSelDates('mdd-marc')||fechas;
+    csv=['Fecha','CI','Merchant','Marca','PDV','Hora Entrada','Hora Inicio Almuerzo','Hora Fin Almuerzo','Hora Salida','Duración Jornada','Duración Almuerzo','Estado','Observaciones'].join(sep)+'\n';
+
+    // Group marcaciones by ci+fecha to get entrada/salida pairs
+    const porCiFecha={};
+    filtrar({marca,fechas:fechasFiltro}).forEach(m=>{
+      const key=`${m.ci}_${m.fecha}`;
+      if(!porCiFecha[key]) porCiFecha[key]={ci:m.ci,nombre:m.nombre,marca:m.marca,fecha:m.fecha,pdv:m.pdv,entrada:'',salida:'',obsId:null};
+      if(m.entrada&&(!porCiFecha[key].entrada||m.entrada<porCiFecha[key].entrada)){porCiFecha[key].entrada=m.entrada;porCiFecha[key].obsId=m.id;}
+      if(m.salida&&(!porCiFecha[key].salida||m.salida>porCiFecha[key].salida)) porCiFecha[key].salida=m.salida;
+    });
+    // Merge almuerzos data
+    const almPorCiFecha={};
+    S.almuerzos.filter(a=>{
+      if(fechasFiltro&&fechasFiltro.length&&!fechasFiltro.includes(a.fecha))return false;
+      if(marca&&a.marca!==marca)return false;
+      return true;
+    }).forEach(a=>{
+      const key=`${a.ci}_${a.fecha}`;
+      almPorCiFecha[key]=a;
+    });
+
+    // Build unified key set
+    const allKeys=new Set([...Object.keys(porCiFecha),...Object.keys(almPorCiFecha)]);
+    const rows=[...allKeys].map(key=>{
+      const loc=porCiFecha[key];
+      const alm=almPorCiFecha[key];
+      const base=loc||{ci:alm.ci,nombre:alm.nombre,marca:alm.marca,fecha:alm.fecha,pdv:alm.pdv,entrada:'',salida:''};
+      const obs=loc&&loc.obsId!=null?getObs(loc.obsId):{cat:'',txt:''};
+      const durJornada=base.entrada&&base.salida?cDur(base.entrada,base.salida):'';
+      const durAlm=alm&&alm.fin?alm.duracion:'';
+      const excedido=alm&&alm.fin&&almuerzoExcedido(dToM(alm.duracion));
+      const tarde=esTardanza(base.entrada);
+      let estado=[];
+      if(tarde) estado.push('TARDANZA');
+      if(base.entrada&&!base.salida) estado.push('SIN CHECKOUT');
+      if(excedido) estado.push('ALMUERZO EXCEDIDO');
+      return{...base,inicioAlm:alm?alm.inicio:'',finAlm:alm?alm.fin:'',durJornada,durAlm,estado:estado.join(' | ')||'OK',obsTxt:obs.txt||obs.texto||''};
+    });
+    rows.sort((a,b)=>{const t=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};const fd=t(a.fecha).localeCompare(t(b.fecha));return fd!==0?fd:a.nombre.localeCompare(b.nombre);});
+    rows.forEach(r=>{
+      csv+=[r.fecha,r.ci,r.nombre,r.marca,r.pdv,r.entrada||'',r.inicioAlm||'',r.finAlm||'',r.salida||'',r.durJornada||'',r.durAlm||'',r.estado,r.obsTxt.replace(/;/g,',')].join(sep)+'\n';
     });
   } else if(fmt==='detalle'){
     // Use active filters from marcaciones view if available
@@ -1784,11 +2175,15 @@ function renderPDV(){
   let rows='',thead='';
   if(agrupar==='pdv'){
     document.getElementById('pdv-table-title').textContent='Horas por Punto de Venta';
-    thead=`<tr><th>Punto de Venta</th><th>Visitas</th><th>Personas</th><th>Horas totales</th><th>Promedio/visita</th><th></th></tr>`;
+    thead='<tr>'+thSort('pdv','pdv','Punto de Venta','renderPDV')+thSort('pdv','visitas','Visitas','renderPDV')+thSort('pdv','personas','Personas','renderPDV')+thSort('pdv','horas','Horas totales','renderPDV')+thSort('pdv','prom','Promedio/visita','renderPDV')+'<th></th></tr>';
     const byPDV={};
     marc.forEach(m=>{if(!byPDV[m.pdv])byPDV[m.pdv]={visitas:[],personas:new Set(),mins:0};byPDV[m.pdv].visitas.push(m);byPDV[m.pdv].personas.add(m.ci);byPDV[m.pdv].mins+=dToM(m.duracion);});
-    const filtered=Object.entries(byPDV).sort((a,b)=>b[1].mins-a[1].mins).filter(([pdv])=>!buscar||pdv.toLowerCase().includes(buscar));
-    rows=filtered.map(([pdv,d],i)=>{
+    let entries=Object.entries(byPDV).filter(([pdv])=>!buscar||pdv.toLowerCase().includes(buscar));
+    if(_tblSort.pdv&&_tblSort.pdv.col){
+      const getters={pdv:([p])=>p,visitas:([,d])=>d.visitas.length,personas:([,d])=>d.personas.size,horas:([,d])=>d.mins,prom:([,d])=>d.visitas.length>0?d.mins/d.visitas.length:0};
+      entries=applySort('pdv',entries,getters);
+    } else { entries.sort((a,b)=>b[1].mins-a[1].mins); }
+    rows=entries.map(([pdv,d],i)=>{
       const avg=d.visitas.length>0?Math.round(d.mins/d.visitas.length):0;
       return`<tr style="${i%2===0?'':'background:var(--sf2)'}">
         <td style="font-weight:600">${pdv}</td><td class="mono">${d.visitas.length}</td>
@@ -1798,18 +2193,26 @@ function renderPDV(){
         <td><button class="btn bts btsm" onclick="expandPDV('${pdv.replace(/'/g,"\\'")}')">Ver detalle</button></td>
       </tr>`;
     }).join('');
-    document.getElementById('pdv-count').textContent=`${filtered.length} PDV`;
+    document.getElementById('pdv-count').textContent=`${entries.length} PDV`;
   } else {
     document.getElementById('pdv-table-title').textContent='Horas por Persona y PDV';
-    thead=`<tr><th>Persona</th><th>Marca</th><th>PDV</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr>`;
-    const filtered=marc.filter(m=>!buscar||m.nombre.toLowerCase().includes(buscar)||m.pdv.toLowerCase().includes(buscar)).sort((a,b)=>a.nombre>b.nombre?1:a.nombre<b.nombre?-1:a.fecha>b.fecha?1:-1);
-    rows=filtered.map((m,i)=>`<tr style="${i%2===0?'':'background:var(--sf2)'}">
+    thead='<tr>'+thSort('pdv','nombre','Persona','renderPDV')+'<th>Marca</th>'+thSort('pdv','pdv','PDV','renderPDV')+thSort('pdv','fecha','Fecha','renderPDV')+'<th>Entrada</th><th>Salida</th>'+thSort('pdv','dur','Duración','renderPDV')+'</tr>';
+    let filtered=marc.filter(m=>!buscar||m.nombre.toLowerCase().includes(buscar)||m.pdv.toLowerCase().includes(buscar));
+    if(_tblSort.pdv&&_tblSort.pdv.col){
+      const getters={nombre:m=>m.nombre,pdv:m=>m.pdv,fecha:m=>{const p=m.fecha.split('/');return p[2]+p[1]+p[0];},dur:m=>dToM(m.duracion)};
+      filtered=applySort('pdv',filtered,getters);
+    } else { filtered.sort((a,b)=>a.nombre>b.nombre?1:a.nombre<b.nombre?-1:a.fecha>b.fecha?1:-1); }
+    rows=filtered.map((m,i)=>{
+      const tarde=esTardanza(m.entrada);
+      const incompleta=m.entrada&&!m.salida;
+      const rowBg=incompleta?'background:#fff8f8':tarde?'background:#fffbeb':i%2===0?'':'background:var(--sf2)';
+      return`<tr style="${rowBg}">
       <td style="font-weight:600">${m.nombre}</td>
       <td><span class="pill pdk" style="font-size:11px">${m.marca}</span></td>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.pdv}</td>
-      <td class="mono">${m.fecha}</td><td class="mono">${m.entrada||'—'}</td><td class="mono">${m.salida||'—'}</td>
+      <td class="mono">${m.fecha}</td><td class="mono">${m.entrada||'—'}${tarde?' ⚠️':''}</td><td class="mono">${incompleta?'<span style="color:var(--rd)">⚠️</span>':m.salida||'—'}</td>
       <td class="mono" style="font-weight:600;color:${m.duracion?'var(--gn)':'var(--tx2)'}">${m.duracion||'—'}</td>
-    </tr>`).join('');
+    </tr>`;}).join('');
     document.getElementById('pdv-count').textContent=`${filtered.length} registros`;
   }
   document.getElementById('pdv-thead').innerHTML=thead;
@@ -1817,6 +2220,7 @@ function renderPDV(){
 }
 
 function expandPDV(pdv){
+  document.getElementById('pfav-btn').style.display='none';
   const fechas=getSelDates('mdd-pdv');
   const marca=document.getElementById('f-marca-pdv').value;
   const marc=filtrar({fechas,marca}).filter(m=>m.pdv===pdv);
@@ -2311,14 +2715,11 @@ function renderAusencias(){
   });
 
   // Apply category filter
-  const filtered=ausencias.filter(a=>{
+  let filtered=ausencias.filter(a=>{
     if(catFiltro==='sin_categoria') return !a.cat;
     if(catFiltro==='justificadas') return !!a.cat&&!restaProd(a.cat);
     return true;
   });
-
-  // Sort by fecha then nombre
-  filtered.sort((a,b)=>a.fecha>b.fecha?1:a.fecha<b.fecha?-1:a.nombre.localeCompare(b.nombre));
 
   // Stats
   const total=filtered.length;
@@ -2332,6 +2733,21 @@ function renderAusencias(){
     <div class="sc2" style="border-color:#2eb87244"><div class="slbl">Justificadas</div><div class="sval" style="color:var(--gn)">${justificadas}</div><div class="ssub">reposo, libre, etc.</div></div>
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Personas ausentes</div><div class="sval" style="color:var(--bl)">${personas}</div><div class="ssub">personas distintas</div></div>`;
 
+  // Sort by clicked column if set, else default fecha+nombre
+  document.getElementById('aus-thead').innerHTML='<tr>'+
+    thSort('aus','fecha','Fecha','renderAusencias')+
+    thSort('aus','ci','CI','renderAusencias')+
+    thSort('aus','nombre','Nombre y Apellido','renderAusencias')+
+    thSort('aus','marca','Marca','renderAusencias')+
+    '<th>Categoría</th><th>Observación</th><th></th></tr>';
+
+  if(_tblSort.aus&&_tblSort.aus.col){
+    const getters={fecha:a=>{const p=a.fecha.split('/');return p[2]+p[1]+p[0];},ci:a=>a.ci,nombre:a=>a.nombre,marca:a=>a.marca};
+    filtered=applySort('aus',filtered,getters);
+  } else {
+    filtered.sort((a,b)=>a.fecha>b.fecha?1:a.fecha<b.fecha?-1:a.nombre.localeCompare(b.nombre));
+  }
+
   const rows=filtered.map((a,i)=>`<tr style="${i%2===0?'':'background:var(--sf2)'}">
     <td class="mono">${a.fecha}</td>
     <td class="mono">${a.ci}</td>
@@ -2340,6 +2756,7 @@ function renderAusencias(){
     <td>${a.cat?catPill(a.cat):'<span class="pill pr" style="font-size:11px">❌ Sin categoría</span>'}</td>
     <td style="font-size:12px;color:var(--tx2)">${a.obs||'—'}</td>
     <td><button class="btn bts btsm" onclick="openObsDia('${a.ci}','${a.nombre.replace(/'/g,"\\'")}','${a.marca}','${fechas.join(',')}')">+ Obs</button></td>
+
   </tr>`).join('');
 
   document.getElementById('aus-tbody').innerHTML=rows||'<tr><td colspan="7" class="empty">No hay ausencias para los filtros seleccionados 🎉</td></tr>';
@@ -2457,6 +2874,27 @@ function genDM(){
         const pdv=DPDV[Math.floor(Math.random()*DPDV.length)];
         all.push({id:id++,ci:p.ci,nombre:p.nombre,marca:p.marca,pdv,fecha:f,entrada:e,salida:s,duracion:s?cDur(e,s):''});
         h++;
+      }
+    });
+  });
+  return all;
+}
+
+function genDA(){
+  // Demo almuerzos — most people lunch ~12:00-13:00, some go over 60min
+  const all=[];let id=0;
+  DP.forEach(p=>{
+    DFS.slice(0,Math.floor(Math.random()*4)+2).forEach(f=>{
+      if(Math.random()>0.15){ // 85% chance of having lunch record
+        const h=11+Math.floor(Math.random()*2);
+        const m=Math.floor(Math.random()*60);
+        const inicio=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        const dur=Math.random()>0.75?60+Math.floor(Math.random()*40):30+Math.floor(Math.random()*30); // some go over 60
+        const totalMin=h*60+m+dur;
+        const fh=Math.floor(totalMin/60),fm=totalMin%60;
+        const fin=`${String(fh).padStart(2,'0')}:${String(fm).padStart(2,'0')}`;
+        const pdv=DPDV[Math.floor(Math.random()*DPDV.length)];
+        all.push({id:id++,ci:p.ci,nombre:p.nombre,marca:p.marca,pdv,fecha:f,inicio,fin,duracion:cDur(inicio,fin)});
       }
     });
   });
