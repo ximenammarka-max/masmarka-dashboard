@@ -2638,7 +2638,7 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
     } else {
       almExcedidos.forEach(a=>drawCard({
         nombre:a.nombre,marca:a.marca,fecha:a.fecha,pdv:null,
-        destacado:a.duracion,destacadoSub:`${a.inicio} → ${a.fin}`,color:COL_RED,h:58
+        destacado:a.duracion,destacadoSub:`${a.inicio} - ${a.fin}`,color:COL_RED,h:58
       }));
     }
   }
