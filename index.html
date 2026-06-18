@@ -106,6 +106,36 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;l
 .mdd-item input[type=checkbox]{accent-color:var(--ac);width:14px;height:14px;}
 .mdd-all{border-bottom:1px solid var(--bd);font-weight:600;color:var(--tx2);}
 .mdd-badge{background:var(--ac);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:auto;}
+
+/* ── CALENDARIO DE RANGO (reemplaza el dropdown de checkboxes) ────────── */
+.cal-panel{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid var(--bd);border-radius:14px;box-shadow:var(--shm);z-index:55;display:none;padding:16px;width:300px;}
+.cal-panel.open{display:block;}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cal-nav{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);transition:background .12s;border:none;background:none;}
+.cal-nav:hover{background:var(--sf2);color:var(--ac);}
+.cal-month{font-size:13px;font-weight:700;color:var(--tx);text-transform:capitalize;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-weekdays span{text-align:center;font-size:10px;color:var(--tx3);font-weight:600;text-transform:uppercase;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{position:relative;text-align:center;font-size:12.5px;padding:7px 0;cursor:pointer;border-radius:7px;color:var(--tx);transition:background .12s;user-select:none;}
+.cal-day:hover{background:var(--sf2);}
+.cal-day.disabled{color:var(--tx3);cursor:not-allowed;opacity:.35;}
+.cal-day.disabled:hover{background:none;}
+.cal-day.in-range{background:var(--rd-bg);border-radius:0;}
+.cal-day.range-start{background:var(--ac);color:#fff;border-radius:7px 0 0 7px;}
+.cal-day.range-end{background:var(--ac);color:#fff;border-radius:0 7px 7px 0;}
+.cal-day.range-start.range-end{border-radius:7px;}
+.cal-day.today::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gn);}
+.cal-day.range-start.today::after,.cal-day.range-end.today::after{background:#fff;}
+.cal-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);gap:8px;}
+.cal-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.cal-preset{font-size:11px;padding:5px 10px;border-radius:20px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.cal-preset:hover{border-color:var(--ac);color:var(--ac);}
+.cal-range-label{font-size:11px;color:var(--tx2);}
+.cal-range-label strong{color:var(--tx);}
+body.dark .cal-panel{background:var(--sf);border-color:var(--bd);}
+body.dark .cal-day.in-range{background:rgba(193,29,42,.18);}
+body.dark .cal-preset{background:var(--sf2);}
 /* STATS */
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
 .sc2{background:var(--sf);border-radius:var(--r);border:1px solid var(--bd);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease;}
@@ -433,15 +463,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
     <div id="view-resumen" class="content">
       <div class="ph"><h1 id="res-title">Resumen General</h1><p id="res-sub">Cobertura de asistencia</p></div>
       <div class="filters">
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-res" onclick="toggleMDD('mdd-res')">
+        <div class="multi-date-wrap" id="caldd-res-wrap">
+          <div class="multi-date-btn" id="mdb-res" onclick="toggleCal('res')">
             📅 <span id="mdb-res-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-res">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-res')"><input type="checkbox" id="mdd-res-all" checked> Todas las fechas</div>
-            <div id="mdd-res-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-res"></div>
         </div>
         <select class="fsel" id="f-marca-res" onchange="renderResumen()"><option value="">Todas las marcas</option></select>
       </div>
@@ -461,15 +488,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
         <select class="fsel" id="f-mes-asist" onchange="seleccionarMesAsist()" style="font-weight:600">
           <option value="">Seleccionar mes...</option>
         </select>
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-asist" onclick="toggleMDD('mdd-asist')">
-            📅 <span id="mdb-asist-label">Seleccioná fechas</span>
+        <div class="multi-date-wrap" id="caldd-asist-wrap">
+          <div class="multi-date-btn" id="mdb-asist" onclick="toggleCal('asist')">
+            📅 <span id="mdb-asist-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-asist">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-asist')"><input type="checkbox" id="mdd-asist-all"> Todas las fechas</div>
-            <div id="mdd-asist-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-asist"></div>
         </div>
         <select class="fsel" id="f-marca-asist" onchange="renderAsistencia()"><option value="">Todas las marcas</option></select>
         <select class="fsel" id="f-estado-asist" onchange="renderAsistencia()">
@@ -485,15 +509,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
     <div id="view-marcaciones" class="content" style="display:none">
       <div class="ph"><h1>Marcaciones</h1><p>Detalle de entradas y salidas por punto de venta</p></div>
       <div class="filters">
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-marc" onclick="toggleMDD('mdd-marc')">
+        <div class="multi-date-wrap" id="caldd-marc-wrap">
+          <div class="multi-date-btn" id="mdb-marc" onclick="toggleCal('marc')">
             📅 <span id="mdb-marc-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-marc">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-marc')"><input type="checkbox" id="mdd-marc-all" checked> Todas las fechas</div>
-            <div id="mdd-marc-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-marc"></div>
         </div>
         <select class="fsel" id="f-marca-marc" onchange="renderMarcaciones()"><option value="">Todas las marcas</option></select>
         <select class="fsel" id="f-persona-marc" onchange="renderMarcaciones()"><option value="">Todas las personas</option></select>
@@ -521,15 +542,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
     <div id="view-productividad" class="content" style="display:none">
       <div class="ph"><h1>Productividad</h1><p>Ranking y métricas por el período seleccionado</p></div>
       <div class="filters">
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-prod" onclick="toggleMDD('mdd-prod')">
+        <div class="multi-date-wrap" id="caldd-prod-wrap">
+          <div class="multi-date-btn" id="mdb-prod" onclick="toggleCal('prod')">
             📅 <span id="mdb-prod-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-prod">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-prod')"><input type="checkbox" id="mdd-prod-all" checked> Todas las fechas</div>
-            <div id="mdd-prod-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-prod"></div>
         </div>
         <select class="fsel" id="f-marca-prod" onchange="renderProductividad()"><option value="">Todas las marcas</option></select>
         <input class="finput" id="f-buscar-prod" placeholder="Buscar persona..." oninput="renderProductividad()" style="width:180px">
@@ -550,15 +568,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
     <div id="view-pdv" class="content" style="display:none">
       <div class="ph"><h1>Reporte por Punto de Venta</h1><p>Horas trabajadas y visitas por PDV y persona</p></div>
       <div class="filters">
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-pdv" onclick="toggleMDD('mdd-pdv')">
+        <div class="multi-date-wrap" id="caldd-pdv-wrap">
+          <div class="multi-date-btn" id="mdb-pdv" onclick="toggleCal('pdv')">
             📅 <span id="mdb-pdv-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-pdv">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-pdv')"><input type="checkbox" id="mdd-pdv-all" checked> Todas las fechas</div>
-            <div id="mdd-pdv-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-pdv"></div>
         </div>
         <select class="fsel" id="f-marca-pdv" onchange="renderPDV()"><option value="">Todas las marcas</option></select>
         <input class="finput" id="f-buscar-pdv" placeholder="Buscar PDV o persona..." oninput="renderPDV()" style="width:200px">
@@ -614,15 +629,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
     <div id="view-ausencias" class="content" style="display:none">
       <div class="ph"><h1>Reporte de Ausencias</h1><p>Personas que no marcaron en el período seleccionado, con sus categorías y observaciones</p></div>
       <div class="filters">
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-aus" onclick="toggleMDD('mdd-aus')">
-            📅 <span id="mdb-aus-label">Seleccioná fechas</span>
+        <div class="multi-date-wrap" id="caldd-aus-wrap">
+          <div class="multi-date-btn" id="mdb-aus" onclick="toggleCal('aus')">
+            📅 <span id="mdb-aus-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-aus">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-aus')"><input type="checkbox" id="mdd-aus-all"> Todas las fechas</div>
-            <div id="mdd-aus-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-aus"></div>
         </div>
         <select class="fsel" id="f-marca-aus" onchange="renderAusencias()"><option value="">Todas las marcas</option></select>
         <select class="fsel" id="f-cat-aus" onchange="renderAusencias()">
@@ -652,15 +664,12 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
     <div id="view-mapa" class="content" style="display:none">
       <div class="ph"><h1>Mapa de Cobertura</h1><p>Ubicación geográfica de las marcaciones y recorrido por persona</p></div>
       <div class="filters">
-        <div class="multi-date-wrap">
-          <div class="multi-date-btn" id="mdb-mapa" onclick="toggleMDD('mdd-mapa')">
+        <div class="multi-date-wrap" id="caldd-mapa-wrap">
+          <div class="multi-date-btn" id="mdb-mapa" onclick="toggleCal('mapa')">
             📅 <span id="mdb-mapa-label">Todas las fechas</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="multi-date-dropdown" id="mdd-mapa">
-            <div class="mdd-item mdd-all" onclick="toggleAllDates('mdd-mapa')"><input type="checkbox" id="mdd-mapa-all" checked> Todas las fechas</div>
-            <div id="mdd-mapa-items"></div>
-          </div>
+          <div class="cal-panel" id="cal-mapa"></div>
         </div>
         <select class="fsel" id="f-marca-mapa" onchange="renderMapa()"><option value="">Todas las marcas</option></select>
         <select class="fsel" id="f-persona-mapa" onchange="renderMapa()"><option value="">📍 Cobertura general</option></select>
@@ -986,7 +995,7 @@ function iniciarApp(){
   applyTheme();poblarFiltros();renderSBP();renderAll();setAR();
   // Close dropdowns on outside click
   document.addEventListener('click',e=>{
-    if(!e.target.closest('.multi-date-wrap')) document.querySelectorAll('.multi-date-dropdown').forEach(d=>d.classList.remove('open'));
+    if(!e.target.closest('.multi-date-wrap')) document.querySelectorAll('.cal-panel').forEach(p=>p.classList.remove('open'));
     if(!e.target.closest('.ssearch')) document.getElementById('gs-results')?.remove();
   });
 }
@@ -1141,10 +1150,194 @@ function ptc4(pct){return pct>=90?'var(--gn)':pct>=70?'var(--yw)':pct>=40?'#f973
 function pemoji4(pct){return pct>=90?'🟢':pct>=70?'🟡':pct>=40?'🟠':'🔴';}
 
 // Get selected dates from a multi-date dropdown
-function getSelDates(ddId){
-  const items=document.querySelectorAll(`#${ddId}-items .mdd-item input[type=checkbox]`);
-  const sel=[...items].filter(i=>i.checked).map(i=>i.value);
-  return sel.length===0?null:sel; // null = all
+// ── CALENDARIO DE RANGO ──────────────────────────────────────────────
+// Reemplaza el viejo dropdown de checkboxes por un selector visual de
+// rango (desde/hasta). Mantiene la misma interfaz que usaba el resto del
+// código: getSelDates(prefix) devuelve un array de fechas en el rango, o
+// null si no hay rango activo (= todas las fechas).
+const CAL_STATE={}; // { prefix: {viewMonth:Date, start:'DD/MM/YYYY'|null, end:'DD/MM/YYYY'|null, pickingEnd:bool} }
+const MESES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_ES=['DO','LU','MA','MI','JU','VI','SA'];
+
+function dToDate(d){ // 'DD/MM/YYYY' -> Date
+  const [dd,mm,yyyy]=d.split('/').map(Number);
+  return new Date(yyyy,mm-1,dd);
+}
+function dateToD(date){ // Date -> 'DD/MM/YYYY'
+  return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
+}
+
+function getSelDates(ddIdOrPrefix){
+  const prefix=ddIdOrPrefix.replace('mdd-','').replace('caldd-','');
+  const st=CAL_STATE[prefix];
+  if(!st||!st.start) return null; // sin rango = todas las fechas
+  const todas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  const startK=st.start.split('/').reverse().join('');
+  const endK=(st.end||st.start).split('/').reverse().join('');
+  const lo=startK<=endK?startK:endK, hi=startK<=endK?endK:startK;
+  return todas.filter(f=>{
+    const k=f.split('/').reverse().join('');
+    return k>=lo&&k<=hi;
+  });
+}
+
+function initCalState(prefix){
+  if(!CAL_STATE[prefix]){
+    const todas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+    const ultima=todas[todas.length-1];
+    CAL_STATE[prefix]={viewMonth:ultima?dToDate(ultima):new Date(),start:null,end:null,pickingEnd:false};
+  }
+}
+
+function toggleCal(prefix){
+  initCalState(prefix);
+  const panel=document.getElementById(`cal-${prefix}`);
+  const wasOpen=panel.classList.contains('open');
+  document.querySelectorAll('.cal-panel').forEach(p=>p.classList.remove('open'));
+  if(!wasOpen){
+    panel.classList.add('open');
+    renderCalPanel(prefix);
+  }
+}
+
+function calPresets(prefix){
+  const todas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  if(!todas.length)return [];
+  const ultima=todas[todas.length-1];
+  const ultimaDate=dToDate(ultima);
+  const preset=(label,days)=>{
+    const desde=new Date(ultimaDate); desde.setDate(desde.getDate()-(days-1));
+    const desdeD=dateToD(desde);
+    // clamp al rango real de datos disponibles
+    const desdeFinal=todas.find(f=>f.split('/').reverse().join('')>=desdeD.split('/').reverse().join(''))||todas[0];
+    return {label,start:desdeFinal,end:ultima};
+  };
+  return [
+    {label:'Hoy',start:ultima,end:ultima},
+    preset('Últimos 7 días',7),
+    preset('Últimos 15 días',15),
+    preset('Últimos 30 días',30),
+    {label:'Todo',start:null,end:null},
+  ];
+}
+
+function renderCalPanel(prefix){
+  const panel=document.getElementById(`cal-${prefix}`);
+  const st=CAL_STATE[prefix];
+  const y=st.viewMonth.getFullYear(), m=st.viewMonth.getMonth();
+  const todas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  const todasSet=new Set(todas);
+  const minK=todas.length?todas[0].split('/').reverse().join(''):null;
+  const maxK=todas.length?todas[todas.length-1].split('/').reverse().join(''):null;
+
+  const firstDay=new Date(y,m,1);
+  const startWeekday=firstDay.getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const hoy=dateToD(new Date());
+
+  const startK=st.start?st.start.split('/').reverse().join(''):null;
+  const endK=st.end?st.end.split('/').reverse().join(''):(startK||null);
+  const loK=startK&&endK?(startK<=endK?startK:endK):startK;
+  const hiK=startK&&endK?(startK<=endK?endK:startK):endK;
+
+  let daysHtml='';
+  for(let i=0;i<startWeekday;i++) daysHtml+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${String(d).padStart(2,'0')}/${String(m+1).padStart(2,'0')}/${y}`;
+    const k=dateStr.split('/').reverse().join('');
+    const fueraDeRango=(minK&&k<minK)||(maxK&&k>maxK);
+    const esHoy=dateStr===hoy;
+    let cls='cal-day';
+    if(fueraDeRango) cls+=' disabled';
+    if(esHoy) cls+=' today';
+    if(loK&&hiK&&k>=loK&&k<=hiK) cls+=' in-range';
+    if(k===loK) cls+=' range-start';
+    if(k===hiK) cls+=' range-end';
+    daysHtml+=`<div class="${cls}" ${fueraDeRango?'':`onclick="calPickDay('${prefix}','${dateStr}')"`}>${d}</div>`;
+  }
+
+  const presets=calPresets(prefix);
+  const rangeLabel=st.start?(st.end&&st.end!==st.start?`${st.start} → ${st.end}`:st.start):'Todas las fechas';
+
+  panel.innerHTML=`
+    <div class="cal-presets">
+      ${presets.map(p=>`<span class="cal-preset" onclick="calApplyPreset('${prefix}','${p.start||''}','${p.end||''}')">${p.label}</span>`).join('')}
+    </div>
+    <div class="cal-head">
+      <button class="cal-nav" onclick="calNavMonth('${prefix}',-1)">‹</button>
+      <span class="cal-month">${MESES_ES[m]} ${y}</span>
+      <button class="cal-nav" onclick="calNavMonth('${prefix}',1)">›</button>
+    </div>
+    <div class="cal-weekdays">${DIAS_ES.map(d=>`<span>${d}</span>`).join('')}</div>
+    <div class="cal-days">${daysHtml}</div>
+    <div class="cal-foot">
+      <span class="cal-range-label"><strong>${rangeLabel}</strong></span>
+      <button class="btn bts btsm" onclick="calClear('${prefix}')">Limpiar</button>
+    </div>
+  `;
+}
+
+function calNavMonth(prefix,delta){
+  const st=CAL_STATE[prefix];
+  st.viewMonth=new Date(st.viewMonth.getFullYear(),st.viewMonth.getMonth()+delta,1);
+  renderCalPanel(prefix);
+}
+
+function calPickDay(prefix,dateStr){
+  const st=CAL_STATE[prefix];
+  const tieneRangoCompleto=st.start&&st.end;
+  if(!st.start||tieneRangoCompleto){
+    // sin selección previa, o ya había un rango completo: empezar de nuevo
+    st.start=dateStr; st.end=null; st.pickingEnd=true;
+  } else {
+    // ya hay un "desde" esperando el "hasta": este click define el otro extremo
+    const startK=st.start.split('/').reverse().join('');
+    const clickK=dateStr.split('/').reverse().join('');
+    if(clickK<startK){ st.end=st.start; st.start=dateStr; }
+    else { st.end=dateStr; }
+    st.pickingEnd=false;
+  }
+  renderCalPanel(prefix);
+  updateCalLabel(prefix);
+  triggerViewRenderPrefix(prefix); // refresca siempre: con un solo click ya filtra por ese día (fallback en getSelDates)
+}
+
+function calApplyPreset(prefix,start,end){
+  const st=CAL_STATE[prefix];
+  if(!start){ st.start=null; st.end=null; }
+  else { st.start=start; st.end=end||start; }
+  st.pickingEnd=false;
+  if(st.start){ st.viewMonth=dToDate(st.start); }
+  renderCalPanel(prefix);
+  updateCalLabel(prefix);
+  triggerViewRenderPrefix(prefix);
+}
+
+function calClear(prefix){
+  const st=CAL_STATE[prefix];
+  st.start=null; st.end=null; st.pickingEnd=false;
+  renderCalPanel(prefix);
+  updateCalLabel(prefix);
+  triggerViewRenderPrefix(prefix);
+}
+
+function updateCalLabel(prefix){
+  const st=CAL_STATE[prefix];
+  const lbl=document.getElementById(`mdb-${prefix}-label`);
+  if(!lbl)return;
+  if(!st.start) lbl.textContent='Todas las fechas';
+  else if(!st.end||st.end===st.start) lbl.textContent=st.start;
+  else lbl.textContent=`${st.start} → ${st.end}`;
+}
+
+function triggerViewRenderPrefix(prefix){
+  if(prefix==='res')renderResumen();
+  else if(prefix==='asist')renderAsistencia();
+  else if(prefix==='marc')renderMarcaciones();
+  else if(prefix==='prod')renderProductividad();
+  else if(prefix==='pdv')renderPDV();
+  else if(prefix==='aus')renderAusencias();
+  else if(prefix==='mapa')renderMapa();
 }
 
 function filtrar(f={}){
@@ -1195,77 +1388,22 @@ function getStats(ci,fechasFiltro){
   return result;
 }
 
-// ── MULTI-DATE DROPDOWN ───────────────────────────────────────────────
-function toggleMDD(id){
-  const dd=document.getElementById(id);
-  const wasOpen=dd.classList.contains('open');
-  document.querySelectorAll('.multi-date-dropdown').forEach(d=>d.classList.remove('open'));
-  if(!wasOpen)dd.classList.add('open');
-}
-
-function toggleAllDates(ddId){
-  const allCb=document.getElementById(`${ddId}-all`);
-  allCb.checked=!allCb.checked;
-  const items=document.querySelectorAll(`#${ddId}-items .mdd-item input[type=checkbox]`);
-  items.forEach(i=>i.checked=allCb.checked);
-  updateMDDLabel(ddId);
-  triggerViewRender(ddId);
-}
-
-function onMDDChange(ddId,allChecked){
-  const items=document.querySelectorAll(`#${ddId}-items .mdd-item input[type=checkbox]`);
-  const allCb=document.getElementById(`${ddId}-all`);
-  allCb.checked=[...items].every(i=>i.checked);
-  updateMDDLabel(ddId);
-  triggerViewRender(ddId);
-}
-
-function updateMDDLabel(ddId){
-  const items=document.querySelectorAll(`#${ddId}-items .mdd-item input[type=checkbox]`);
-  const sel=[...items].filter(i=>i.checked);
-  const prefix=ddId.replace('mdd-','');
-  const lbl=document.getElementById(`mdb-${prefix}-label`);
-  if(!lbl)return;
-  if(sel.length===0||sel.length===items.length) lbl.textContent='Todas las fechas';
-  else if(sel.length===1) lbl.textContent=sel[0].value;
-  else lbl.textContent=`${sel.length} fechas seleccionadas`;
-  // Update badge
-  const btn=document.getElementById(`mdb-${prefix}`);
-  const existing=btn.querySelector('.mdd-badge');
-  if(existing)existing.remove();
-  if(sel.length>0&&sel.length<items.length){
-    const b=document.createElement('span');b.className='mdd-badge';b.textContent=sel.length;btn.appendChild(b);
-  }
-}
-
-function triggerViewRender(ddId){
-  const prefix=ddId.replace('mdd-','');
-  if(prefix==='res')renderResumen();
-  else if(prefix==='asist')renderAsistencia();
-  else if(prefix==='marc')renderMarcaciones();
-  else if(prefix==='prod')renderProductividad();
-  else if(prefix==='pdv')renderPDV();
-  else if(prefix==='aus')renderAusencias();
-  else if(prefix==='mapa')renderMapa();
-}
-
 // ── FILTERS POPULATION ────────────────────────────────────────────────
 function poblarFiltros(){
   const fechas=sortFechas([...new Set([...S.marcaciones.map(m=>m.fecha),...(S.almuerzos||[]).map(a=>a.fecha)])]);
   const marcas=[...new Set([...S.personas.map(p=>p.marca),...S.marcaciones.map(m=>m.marca)])].sort();
   const personas=[...new Set(S.marcaciones.map(m=>m.nombre))].sort();
 
-  // Populate multi-date dropdowns
+  // Reset calendar state for each date selector (nuevas fechas pueden haber llegado)
   ['res','asist','marc','prod','pdv','aus','mapa'].forEach(prefix=>{
-    const cont=document.getElementById(`mdd-${prefix}-items`);if(!cont)return;
-    const isAsist=prefix==='asist';
-    cont.innerHTML=fechas.map(f=>`
-      <div class="mdd-item">
-        <input type="checkbox" value="${f}" ${!isAsist?'checked':''} onchange="onMDDChange('mdd-${prefix}',this.checked)">
-        <span>${f}</span>
-      </div>`).join('');
-    if(!isAsist){document.getElementById(`mdd-${prefix}-all`).checked=true;}
-    updateMDDLabel(`mdd-${prefix}`);
+    const btn=document.getElementById(`mdb-${prefix}`);if(!btn)return;
+    // Asistencia arranca enfocada en el último día con datos por defecto; el resto sin filtro (todas las fechas)
+    if(prefix==='asist'&&fechas.length){
+      CAL_STATE[prefix]={viewMonth:dToDate(fechas[fechas.length-1]),start:fechas[fechas.length-1],end:fechas[fechas.length-1],pickingEnd:false};
+    } else if(!CAL_STATE[prefix]){
+      CAL_STATE[prefix]={viewMonth:fechas.length?dToDate(fechas[fechas.length-1]):new Date(),start:null,end:null,pickingEnd:false};
+    }
+    updateCalLabel(prefix);
   });
 
   // Marca selects
@@ -1461,16 +1599,13 @@ function seleccionarMesAsist(){
   const mesVal=document.getElementById('f-mes-asist').value;
   if(!mesVal) return;
   const [y,mo]=mesVal.split('/');
-  // Get all dates from that month
+  // Get all dates from that month that actually have data
   const fechas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
   const fechasMes=fechas.filter(f=>{const p=f.split('/');return p[2]===y&&p[1]===mo;});
-  // Check those dates in mdd-asist
-  const items=document.querySelectorAll('#mdd-asist-items .mdd-item input[type=checkbox]');
-  items.forEach(i=>{i.checked=fechasMes.includes(i.value);});
-  // Update all checkbox
-  const allCb=document.getElementById('mdd-asist-all');
-  if(allCb) allCb.checked=[...items].every(i=>i.checked);
-  updateMDDLabel('mdd-asist');
+  if(fechasMes.length===0) return;
+  // Set calendar range to span the full month (first to last date with data)
+  CAL_STATE['asist']={viewMonth:dToDate(fechasMes[0]),start:fechasMes[0],end:fechasMes[fechasMes.length-1],pickingEnd:false};
+  updateCalLabel('asist');
   renderAsistencia();
 }
 
@@ -1562,10 +1697,10 @@ function filtrarIncompletas(){
   document.getElementById('f-pdv-marc').value='';
   document.getElementById('f-persona-marc').value='';
   document.getElementById('f-marca-marc').value='';
-  // Uncheck all dates, check all
-  document.querySelectorAll('#mdd-marc-items .mdd-item input').forEach(i=>i.checked=true);
-  document.getElementById('mdd-marc-all').checked=true;
-  updateMDDLabel('mdd-marc');
+  // Limpiar el rango de fechas para mostrar todas (sin disparar doble render)
+  const st=CAL_STATE['marc'];
+  if(st){st.start=null;st.end=null;st.pickingEnd=false;}
+  updateCalLabel('marc');
   S._soloIncompletas=true;
   renderMarcaciones();
 }
