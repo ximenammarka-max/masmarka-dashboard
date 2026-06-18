@@ -202,7 +202,7 @@ tbody td{padding:9px 14px;font-size:13px;vertical-align:middle;}
 /* MODAL */
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;}
 .mo.open{display:flex;}
-.mod{background:var(--sf);border-radius:16px;padding:26px;width:460px;box-shadow:0 24px 80px rgba(0,0,0,.2);}
+.mod{background:var(--sf);border-radius:16px;padding:26px;width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.2);}
 .mod h2{font-size:16px;font-weight:700;margin-bottom:6px;}
 .mod p{font-size:13px;color:var(--tx2);margin-bottom:18px;}
 .mof{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
@@ -385,7 +385,10 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
       <div class="ni" id="nav-mapa" onclick="showView('mapa')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Mapa de Cobertura
       </div>
-      <div class="nsl" style="margin-top:14px">Alertas</div>
+      <div class="nsl" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
+        <span>Alertas</span>
+        <span onclick="openPdfAlertas()" style="cursor:pointer;font-size:13px;color:rgba(255,255,255,.45)" title="Descargar PDF de alertas">📋</span>
+      </div>
       <div id="sb-alertas"></div>
       <div class="nsl" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between">
         <span>Favoritos</span>
@@ -505,6 +508,7 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
         </select>
         <input class="finput" id="f-pdv-marc" placeholder="Buscar PDV..." oninput="renderMarcaciones()" style="width:150px">
         <button class="btn btp btsm" onclick="exportarMarcacionesDirecto()">↓ Descargar CSV</button>
+        <button class="btn bts btsm" onclick="openPdfAlertas()" style="border-color:var(--rd);color:var(--rd)">📋 PDF de alertas</button>
       </div>
       <div id="marc-alertas-bar" style="display:none;margin-bottom:14px"></div>
       <div class="tc">
@@ -723,6 +727,48 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
   <div class="mof">
     <button class="btn bts" onclick="closeExport()">Cancelar</button>
     <button class="btn btp" onclick="exportarCSV()">↓ Descargar CSV</button>
+  </div>
+</div>
+</div>
+
+<!-- PDF ALERTAS MODAL -->
+<div class="mo" id="pdf-alertas-modal">
+<div class="mod">
+  <h2>📋 Reporte de alertas — PDF</h2>
+  <p>Generá un PDF prolijo para alertar a supervisores sobre tardanzas, faltas de check out y almuerzos excedidos.</p>
+  <div class="fld"><label>Período</label>
+    <select class="fsel" id="pdfal-periodo" onchange="togglePdfAlFechas()" style="width:100%">
+      <option value="hoy">Hoy (último día con datos)</option>
+      <option value="rango">Rango de fechas</option>
+    </select>
+  </div>
+  <div class="fld" id="pdfal-rango-wrap" style="display:none">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Desde</label>
+        <select class="fsel" id="pdfal-desde" style="width:100%"></select></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--tx2)">Hasta</label>
+        <select class="fsel" id="pdfal-hasta" style="width:100%"></select></div>
+    </div>
+  </div>
+  <div class="fld"><label>Marca (opcional)</label>
+    <select class="fsel" id="pdfal-marca" style="width:100%"><option value="">Todas las marcas</option></select>
+  </div>
+  <div class="fld"><label>Alertas a incluir</label>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:400">
+        <input type="checkbox" id="pdfal-tardanzas" checked style="width:16px;height:16px;cursor:pointer"> ⚠️ Tardanzas (entrada después de las 08:15)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:400">
+        <input type="checkbox" id="pdfal-checkout" checked style="width:16px;height:16px;cursor:pointer"> 🔴 Marcaciones sin check out
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:400">
+        <input type="checkbox" id="pdfal-almuerzo" checked style="width:16px;height:16px;cursor:pointer"> 🍴 Almuerzos excedidos (más de 60 min)
+      </label>
+    </div>
+  </div>
+  <div class="mof">
+    <button class="btn bts" onclick="closePdfAlertas()">Cancelar</button>
+    <button class="btn btp" id="pdfal-btn" onclick="generarPdfAlertas()">↓ Generar PDF</button>
   </div>
 </div>
 </div>
@@ -1963,6 +2009,277 @@ function renderVistaActiva(){
 function openExport(){document.getElementById('exp-modal').classList.add('open');}
 function closeExport(){document.getElementById('exp-modal').classList.remove('open');}
 function toggleExpFecha(){}
+
+// ── PDF DE ALERTAS (para supervisores) ──────────────────────────────────
+function openPdfAlertas(){
+  // Poblar selects de fecha con las fechas disponibles
+  const fechas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  const dSel=document.getElementById('pdfal-desde'),hSel=document.getElementById('pdfal-hasta');
+  dSel.innerHTML=fechas.map(f=>`<option value="${f}">${f}</option>`).join('');
+  hSel.innerHTML=fechas.map(f=>`<option value="${f}">${f}</option>`).join('');
+  if(fechas.length){dSel.value=fechas[fechas.length-1];hSel.value=fechas[fechas.length-1];}
+  // Poblar marca con lo que ya está en el select de marcaciones
+  const marcaSrc=document.getElementById('f-marca-marc');
+  const marcaSel=document.getElementById('pdfal-marca');
+  if(marcaSrc) marcaSel.innerHTML=marcaSrc.innerHTML;
+  document.getElementById('pdf-alertas-modal').classList.add('open');
+}
+function closePdfAlertas(){document.getElementById('pdf-alertas-modal').classList.remove('open');}
+function togglePdfAlFechas(){
+  const esRango=document.getElementById('pdfal-periodo').value==='rango';
+  document.getElementById('pdfal-rango-wrap').style.display=esRango?'block':'none';
+}
+
+function loadJsPDF(cb){
+  if(window.jspdf&&window.jspdf.jsPDF){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s.onload=cb;
+  document.head.appendChild(s);
+}
+
+function generarPdfAlertas(){
+  const btn=document.getElementById('pdfal-btn');
+  const origTxt=btn.textContent;
+  btn.textContent='Generando...';btn.disabled=true;
+
+  loadJsPDF(()=>{
+    try{
+      _generarPdfAlertasInterno();
+    }catch(e){
+      alert('Error al generar el PDF: '+e.message);
+      console.error(e);
+    }
+    btn.textContent=origTxt;btn.disabled=false;
+  });
+}
+
+function _generarPdfAlertasInterno(){
+  const periodo=document.getElementById('pdfal-periodo').value;
+  const marca=document.getElementById('pdfal-marca').value;
+  const incTard=document.getElementById('pdfal-tardanzas').checked;
+  const incCheckout=document.getElementById('pdfal-checkout').checked;
+  const incAlm=document.getElementById('pdfal-almuerzo').checked;
+
+  const todasFechas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  let fechasRango;
+  if(periodo==='hoy'){
+    fechasRango=[todasFechas[todasFechas.length-1]];
+  } else {
+    const desde=document.getElementById('pdfal-desde').value;
+    const hasta=document.getElementById('pdfal-hasta').value;
+    const toK=f=>{const p=f.split('/');return p[2]+p[1]+p[0];};
+    fechasRango=todasFechas.filter(f=>toK(f)>=toK(desde)&&toK(f)<=toK(hasta));
+  }
+  if(!fechasRango.length){alert('No hay fechas en el rango seleccionado.');return;}
+
+  const marc=filtrar({fechas:fechasRango,marca});
+  const alm=S.almuerzos.filter(a=>{
+    if(!fechasRango.includes(a.fecha))return false;
+    if(marca&&a.marca!==marca)return false;
+    return true;
+  });
+
+  const tardanzas=incTard?marc.filter(m=>esTardanza(m.entrada)).sort((a,b)=>a.fecha===b.fecha?(a.entrada>b.entrada?1:-1):0):[];
+  const sinCheckout=incCheckout?marc.filter(m=>m.entrada&&!m.salida):[];
+  const almExcedidos=incAlm?alm.filter(a=>a.fin&&almuerzoExcedido(dToM(a.duracion))):[];
+
+  const totalAlertas=tardanzas.length+sinCheckout.length+almExcedidos.length;
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const pageW=doc.internal.pageSize.getWidth();
+  const pageH=doc.internal.pageSize.getHeight();
+  const marginX=40;
+  let y=0;
+
+  // Colores +Marka
+  const COL_RED=[193,29,42];
+  const COL_TEAL=[60,179,168];
+  const COL_DARK=[22,20,20];
+  const COL_GRAY=[108,100,100];
+  const COL_LIGHTBG=[247,248,250];
+
+  // ── HEADER ──
+  doc.setFillColor(...COL_DARK);
+  doc.rect(0,0,pageW,86,'F');
+  doc.setFillColor(...COL_RED);
+  doc.rect(0,82,pageW,4,'F');
+
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  doc.text('+Marka Control',marginX,38);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor(220,220,220);
+  doc.text('Reporte de Alertas — Entradas, Salidas y Almuerzos',marginX,56);
+
+  const periodoLabel=fechasRango.length===1?fechasRango[0]:`${fechasRango[0]} → ${fechasRango[fechasRango.length-1]}`;
+  doc.setFontSize(9.5);
+  doc.setTextColor(200,200,200);
+  doc.text(`Período: ${periodoLabel}${marca?'  ·  Marca: '+marca:''}`,marginX,71);
+
+  // Generado en
+  const ahora=new Date();
+  const fechaGen=ahora.toLocaleDateString('es-PY')+' '+ahora.toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'});
+  doc.setFontSize(8.5);
+  doc.setTextColor(180,180,180);
+  doc.text('Generado: '+fechaGen,pageW-marginX,38,{align:'right'});
+
+  y=110;
+
+  // ── RESUMEN (badges) ──
+  const badges=[];
+  if(incTard) badges.push({n:tardanzas.length,label:'Tardanzas',color:[232,160,69]});
+  if(incCheckout) badges.push({n:sinCheckout.length,label:'Sin check out',color:COL_RED});
+  if(incAlm) badges.push({n:almExcedidos.length,label:'Almuerzos excedidos',color:COL_RED});
+
+  const badgeW=(pageW-marginX*2-12*(badges.length-1))/badges.length;
+  badges.forEach((b,i)=>{
+    const bx=marginX+i*(badgeW+12);
+    doc.setFillColor(...COL_LIGHTBG);
+    doc.roundedRect(bx,y,badgeW,58,6,6,'F');
+    doc.setDrawColor(...b.color);
+    doc.setLineWidth(2.2);
+    doc.line(bx,y,bx,y+58);
+    doc.setTextColor(...b.color);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(22);
+    doc.text(String(b.n),bx+16,y+34);
+    doc.setTextColor(...COL_GRAY);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.text(b.label,bx+16,y+48);
+  });
+  y+=58+26;
+
+  if(totalAlertas===0){
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...COL_TEAL);
+    doc.text('✓ Sin alertas para el período seleccionado. Todo en orden.',marginX,y+10);
+    doc.save(`Alertas_+Marka_${fechasRango[0].replace(/\//g,'-')}.pdf`);
+    return;
+  }
+
+  // ── helper para encabezado de tabla ──
+  function drawTableHeader(cols,colColor){
+    doc.setFillColor(...colColor);
+    doc.rect(marginX,y,pageW-marginX*2,22,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    let cx=marginX+8;
+    cols.forEach(c=>{ doc.text(c.label,cx,y+14.5); cx+=c.w; });
+    y+=22;
+  }
+  function checkPageBreak(rowH){
+    if(y+rowH>pageH-50){
+      doc.addPage();
+      y=40;
+    }
+  }
+  function sectionTitle(emoji,text,color){
+    checkPageBreak(40);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12.5);
+    doc.setTextColor(...color);
+    doc.text(`${emoji}  ${text}`,marginX,y+4);
+    y+=20;
+  }
+
+  // ── TARDANZAS ──
+  if(incTard){
+    sectionTitle('⚠️','Tardanzas ('+tardanzas.length+')',[180,120,30]);
+    if(tardanzas.length===0){
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...COL_GRAY);
+      doc.text('Sin tardanzas registradas en el período.',marginX,y+2);y+=22;
+    } else {
+      const cols=[{label:'PERSONA',w:150},{label:'MARCA',w:80},{label:'PDV',w:130},{label:'FECHA',w:65},{label:'HORA',w:50}];
+      drawTableHeader(cols,[232,160,69]);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+      tardanzas.forEach((t,i)=>{
+        checkPageBreak(20);
+        if(i%2===0){doc.setFillColor(...COL_LIGHTBG);doc.rect(marginX,y,pageW-marginX*2,18,'F');}
+        doc.setTextColor(...COL_DARK);
+        let cx=marginX+8;
+        const vals=[t.nombre.length>26?t.nombre.slice(0,24)+'…':t.nombre,t.marca,(t.pdv||'').length>22?t.pdv.slice(0,20)+'…':t.pdv,t.fecha,t.entrada];
+        cols.forEach((c,ci)=>{ doc.text(String(vals[ci]||'—'),cx,y+12.5); cx+=c.w; });
+        y+=18;
+      });
+      y+=16;
+    }
+  }
+
+  // ── SIN CHECK OUT ──
+  if(incCheckout){
+    sectionTitle('🔴','Marcaciones sin check out ('+sinCheckout.length+')',COL_RED);
+    if(sinCheckout.length===0){
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...COL_GRAY);
+      doc.text('Todas las marcaciones tienen check out registrado.',marginX,y+2);y+=22;
+    } else {
+      const cols=[{label:'PERSONA',w:150},{label:'MARCA',w:80},{label:'PDV',w:130},{label:'FECHA',w:65},{label:'ENTRADA',w:55}];
+      drawTableHeader(cols,COL_RED);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+      sinCheckout.forEach((m,i)=>{
+        checkPageBreak(20);
+        if(i%2===0){doc.setFillColor(...COL_LIGHTBG);doc.rect(marginX,y,pageW-marginX*2,18,'F');}
+        doc.setTextColor(...COL_DARK);
+        let cx=marginX+8;
+        const vals=[m.nombre.length>26?m.nombre.slice(0,24)+'…':m.nombre,m.marca,(m.pdv||'').length>22?m.pdv.slice(0,20)+'…':m.pdv,m.fecha,m.entrada];
+        cols.forEach((c,ci)=>{ doc.text(String(vals[ci]||'—'),cx,y+12.5); cx+=c.w; });
+        y+=18;
+      });
+      y+=16;
+    }
+  }
+
+  // ── ALMUERZOS EXCEDIDOS ──
+  if(incAlm){
+    sectionTitle('🍴','Almuerzos excedidos — más de '+MAX_ALMUERZO_MIN+' min ('+almExcedidos.length+')',COL_RED);
+    if(almExcedidos.length===0){
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...COL_GRAY);
+      doc.text('Ningún almuerzo excedió el tiempo límite en el período.',marginX,y+2);y+=22;
+    } else {
+      const cols=[{label:'PERSONA',w:140},{label:'MARCA',w:75},{label:'FECHA',w:60},{label:'INICIO',w:55},{label:'FIN',w:55},{label:'DURACIÓN',w:60}];
+      drawTableHeader(cols,COL_RED);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+      almExcedidos.forEach((a,i)=>{
+        checkPageBreak(20);
+        if(i%2===0){doc.setFillColor(...COL_LIGHTBG);doc.rect(marginX,y,pageW-marginX*2,18,'F');}
+        doc.setTextColor(...COL_DARK);
+        let cx=marginX+8;
+        const vals=[a.nombre.length>24?a.nombre.slice(0,22)+'…':a.nombre,a.marca,a.fecha,a.inicio,a.fin,a.duracion];
+        cols.forEach((c,ci)=>{
+          if(ci===5){doc.setTextColor(...COL_RED);doc.setFont('helvetica','bold');}
+          else {doc.setTextColor(...COL_DARK);doc.setFont('helvetica','normal');}
+          doc.text(String(vals[ci]||'—'),cx,y+12.5); cx+=c.w;
+        });
+        y+=18;
+      });
+      y+=16;
+    }
+  }
+
+  // ── FOOTER en cada página ──
+  const totalPages=doc.internal.getNumberOfPages();
+  for(let p=1;p<=totalPages;p++){
+    doc.setPage(p);
+    doc.setDrawColor(230,230,230);
+    doc.setLineWidth(0.5);
+    doc.line(marginX,pageH-36,pageW-marginX,pageH-36);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...COL_GRAY);
+    doc.text('+Marka Control · Mas Marka SRL',marginX,pageH-22);
+    doc.text(`Página ${p} de ${totalPages}`,pageW-marginX,pageH-22,{align:'right'});
+  }
+
+  const nombreArchivo=`Alertas_+Marka_${fechasRango[0].replace(/\//g,'-')}${fechasRango.length>1?'_a_'+fechasRango[fechasRango.length-1].replace(/\//g,'-'):''}.pdf`;
+  doc.save(nombreArchivo);
+  closePdfAlertas();
+}
 
 function exportarMarcacionesDirecto(){
   const fechas=getSelDates('mdd-marc');
