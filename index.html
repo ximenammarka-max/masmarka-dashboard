@@ -2324,7 +2324,7 @@ function generarPdfAlertasPC({fechasRango,marca,tardanzas,sinCheckout,almExcedid
     doc.setFont('helvetica','bold');
     doc.setFontSize(13);
     doc.setTextColor(...COL_TEAL);
-    doc.text('✓ Sin alertas para el período seleccionado. Todo en orden.',marginX,y+10);
+    doc.text('Sin alertas para el período seleccionado. Todo en orden.',marginX,y+10);
     doc.save(`Alertas_+Marka_${fechasRango[0].replace(/\//g,'-')}.pdf`);
     return;
   }
@@ -2348,16 +2348,18 @@ function generarPdfAlertasPC({fechasRango,marca,tardanzas,sinCheckout,almExcedid
   }
   function sectionTitle(emoji,text,color){
     checkPageBreak(40);
+    doc.setFillColor(...color);
+    doc.rect(marginX,y,3,18,'F');
     doc.setFont('helvetica','bold');
     doc.setFontSize(12.5);
     doc.setTextColor(...color);
-    doc.text(`${emoji}  ${text}`,marginX,y+4);
-    y+=20;
+    doc.text(text,marginX+10,y+13);
+    y+=24;
   }
 
   // ── TARDANZAS ──
   if(incTard){
-    sectionTitle('⚠️','Tardanzas ('+tardanzas.length+')',[180,120,30]);
+    sectionTitle('[!]','Tardanzas ('+tardanzas.length+')',[180,120,30]);
     if(tardanzas.length===0){
       doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...COL_GRAY);
       doc.text('Sin tardanzas registradas en el período.',marginX,y+2);y+=22;
@@ -2380,7 +2382,7 @@ function generarPdfAlertasPC({fechasRango,marca,tardanzas,sinCheckout,almExcedid
 
   // ── SIN CHECK OUT ──
   if(incCheckout){
-    sectionTitle('🔴','Marcaciones sin check out ('+sinCheckout.length+')',COL_RED);
+    sectionTitle('[X]','Sin check out ('+sinCheckout.length+')',COL_RED);
     if(sinCheckout.length===0){
       doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...COL_GRAY);
       doc.text('Todas las marcaciones tienen check out registrado.',marginX,y+2);y+=22;
@@ -2403,7 +2405,7 @@ function generarPdfAlertasPC({fechasRango,marca,tardanzas,sinCheckout,almExcedid
 
   // ── ALMUERZOS EXCEDIDOS ──
   if(incAlm){
-    sectionTitle('🍴','Almuerzos excedidos — más de '+MAX_ALMUERZO_MIN+' min ('+almExcedidos.length+')',COL_RED);
+    sectionTitle('[Alm]','Almuerzos excedidos — más de '+MAX_ALMUERZO_MIN+' min ('+almExcedidos.length+')',COL_RED);
     if(almExcedidos.length===0){
       doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...COL_GRAY);
       doc.text('Ningún almuerzo excedió el tiempo límite en el período.',marginX,y+2);y+=22;
@@ -2502,9 +2504,9 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
 
   // ── RESUMEN GRANDE (apilado, números enormes, fácil de leer sin zoom) ──
   const badges=[];
-  if(incTard) badges.push({n:tardanzas.length,label:'TARDANZAS',sub:'entrada después de 08:15',color:COL_AMBER,emoji:'⚠️'});
-  if(incCheckout) badges.push({n:sinCheckout.length,label:'SIN CHECK OUT',sub:'marcación incompleta',color:COL_RED,emoji:'🔴'});
-  if(incAlm) badges.push({n:almExcedidos.length,label:'ALMUERZOS EXCEDIDOS',sub:'más de '+MAX_ALMUERZO_MIN+' minutos',color:COL_RED,emoji:'🍴'});
+  if(incTard) badges.push({n:tardanzas.length,label:'TARDANZAS',sub:'entrada despues de 08:15',color:COL_AMBER,emoji:'!'});
+  if(incCheckout) badges.push({n:sinCheckout.length,label:'SIN CHECK OUT',sub:'marcacion incompleta',color:COL_RED,emoji:'X'});
+  if(incAlm) badges.push({n:almExcedidos.length,label:'ALMUERZOS EXCEDIDOS',sub:'mas de '+MAX_ALMUERZO_MIN+' minutos',color:COL_RED,emoji:'Alm'});
 
   const badgeH=64;
   badges.forEach(b=>{
@@ -2521,7 +2523,7 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
     doc.setFont('helvetica','bold');
     doc.setFontSize(13);
     doc.setTextColor(...COL_DARK);
-    doc.text(b.emoji+' '+b.label,textX,y+badgeH/2+1);
+    doc.text(b.label,textX,y+badgeH/2+1);
     doc.setFont('helvetica','normal');
     doc.setFontSize(10.5);
     doc.setTextColor(...COL_GRAY);
@@ -2537,7 +2539,7 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
     doc.setFont('helvetica','bold');
     doc.setFontSize(15);
     doc.setTextColor(...COL_TEAL);
-    doc.text('✓ Sin alertas en el período',pageW/2,y+30,{align:'center'});
+    doc.text('Sin alertas en el periodo',pageW/2,y+30,{align:'center'});
     doc.setFont('helvetica','normal');
     doc.setFontSize(11);
     doc.setTextColor(...COL_GRAY);
@@ -2571,7 +2573,7 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
     if(opts.pdv){
       const pdvTrunc=opts.pdv.length>48?opts.pdv.slice(0,46)+'…':opts.pdv;
       doc.setFontSize(9.5);
-      doc.text('📍 '+pdvTrunc,padL,y+52);
+      doc.text('PDV: '+pdvTrunc,padL,y+52);
     }
 
     // Dato destacado a la derecha (hora, duración, etc)
@@ -2589,16 +2591,19 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
   }
 
   function sectionHeader(emoji,text,color,count){
-    checkSpace(36);
+    checkSpace(40);
+    // Línea de color + texto — sin emojis
+    doc.setFillColor(...color);
+    doc.rect(marginX,y,3.5,22,'F');
     doc.setFont('helvetica','bold');
     doc.setFontSize(14.5);
     doc.setTextColor(...color);
-    doc.text(`${emoji}  ${text} (${count})`,marginX,y+8);
-    y+=26;
+    doc.text(`${text}  (${count})`,marginX+12,y+15);
+    y+=30;
   }
 
   if(incTard){
-    sectionHeader('⚠️','Tardanzas',COL_AMBER,tardanzas.length);
+    sectionHeader('','Tardanzas',COL_AMBER,tardanzas.length);
     if(tardanzas.length===0){
       doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...COL_GRAY);
       doc.text('Sin tardanzas registradas en el período.',marginX,y+4);y+=24;
@@ -2612,7 +2617,7 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
   }
 
   if(incCheckout){
-    sectionHeader('🔴','Sin check out',COL_RED,sinCheckout.length);
+    sectionHeader('','Sin check out',COL_RED,sinCheckout.length);
     if(sinCheckout.length===0){
       doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...COL_GRAY);
       doc.text('Todas las marcaciones tienen check out registrado.',marginX,y+4);y+=24;
@@ -2626,7 +2631,7 @@ function generarPdfAlertasCelular({fechasRango,marca,tardanzas,sinCheckout,almEx
   }
 
   if(incAlm){
-    sectionHeader('🍴','Almuerzos excedidos',COL_RED,almExcedidos.length);
+    sectionHeader('','Almuerzos excedidos',COL_RED,almExcedidos.length);
     if(almExcedidos.length===0){
       doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(...COL_GRAY);
       doc.text('Ningún almuerzo excedió el tiempo límite.',marginX,y+4);y+=24;
