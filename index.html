@@ -476,10 +476,11 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
         <select class="fsel" id="f-marca-res" onchange="renderResumen()"><option value="">Todas las marcas</option></select>
       </div>
       <div class="sg" id="res-headline"></div>
+      <div class="tc" style="margin-bottom:16px"><div class="tch"><span class="tct">🏆 Ranking de marcas por cumplimiento</span></div><div style="padding:14px" id="res-ranking-marcas"></div></div>
       <div id="res-desvios"></div>
       <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #c11d2a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#c11d2a;font-weight:600"></div>
       <div class="sg" id="res-stats" style="margin-top:8px"></div>
-      <div class="sg" id="res-stats2" style="grid-template-columns:repeat(7,1fr);margin-top:-8px"></div>
+      <div class="sg" id="res-stats2" style="grid-template-columns:repeat(6,1fr);margin-top:-8px"></div>
       <div class="twocol">
         <div class="tc"><div class="tch"><span class="tct">Top PDV visitados</span></div><div style="padding:14px" id="chart-pdv"></div></div>
         <div class="tc"><div class="tch"><span class="tct">Visitas por marca</span></div><div style="padding:14px" id="chart-marca"></div></div>
@@ -1604,15 +1605,20 @@ function renderAll(){renderResumen();renderAsistencia();renderMarcaciones();rend
 // umbrales/criterios que ya existian (esTardanza, almuerzoExcedido, CATS/
 // restaProd) -- no se inventa un criterio nuevo de que cuenta como desvio,
 // solo se agrupa y se muestra de forma mas util que un conteo suelto.
+// Nota: se saco el desvio "ausencias sin justificar" que existia aca antes
+// -- dependia de S.observaciones, que hoy solo se guarda en localStorage del
+// navegador (ver iniciarApp()), no en la planilla compartida. Mostrar ese
+// numero como si fuera un dato confiable de equipo era enganoso: cambiaba
+// segun que computadora lo mirara. El resto de los desvios (tardanza, sin
+// checkout, almuerzo excedido) SI salen de datos que estan en la planilla.
 function calcularDesviosResumen(fechas,marca){
   const fechasEval=(fechas&&fechas.length)?fechas:(S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]));
   const personas=S.personas.filter(p=>!marca||p.marca===marca);
-  const tardanzasPorPersona={},sinCheckoutPorPersona={},almExcedidoPorPersona={},ausenciasSinJustPorPersona={};
+  const tardanzasPorPersona={},sinCheckoutPorPersona={},almExcedidoPorPersona={};
 
   personas.forEach(p=>{
     const marcPersona=(S._idxPorCI&&S._idxPorCI[p.ci])||S.marcaciones.filter(m=>m.ci===p.ci);
     const marcEnPeriodo=marcPersona.filter(m=>fechasEval.includes(m.fecha));
-    const fechasTrabajadas=new Set(marcEnPeriodo.map(m=>m.fecha));
 
     marcEnPeriodo.forEach(m=>{
       if(esTardanza(m.entrada)) (tardanzasPorPersona[p.ci]=tardanzasPorPersona[p.ci]||[]).push(m.fecha);
@@ -1622,16 +1628,9 @@ function calcularDesviosResumen(fechas,marca){
     S.almuerzos.filter(a=>a.ci===p.ci&&fechasEval.includes(a.fecha)).forEach(a=>{
       if(a.fin&&almuerzoExcedido(dToM(a.duracion))) (almExcedidoPorPersona[p.ci]=almExcedidoPorPersona[p.ci]||[]).push(a.fecha);
     });
-
-    fechasEval.forEach(f=>{
-      if(!fechasTrabajadas.has(f)){
-        const obs=getDO(p.ci,f);
-        if(!obs.cat||restaProd(obs.cat)) (ausenciasSinJustPorPersona[p.ci]=ausenciasSinJustPorPersona[p.ci]||[]).push(f);
-      }
-    });
   });
 
-  return {tardanzasPorPersona,sinCheckoutPorPersona,almExcedidoPorPersona,ausenciasSinJustPorPersona};
+  return {tardanzasPorPersona,sinCheckoutPorPersona,almExcedidoPorPersona};
 }
 
 function renderResumenDesvios(desvios){
@@ -1644,10 +1643,6 @@ function renderResumenDesvios(desvios){
   }
 
   const filas=[];
-  const nAus=Object.keys(desvios.ausenciasSinJustPorPersona).length;
-  if(nAus>0) filas.push({tipo:'er',txt:`<strong>${nAus} persona${nAus!==1?'s':''}</strong> con ausencia sin justificar: ${listaNombres(desvios.ausenciasSinJustPorPersona,4)}`+
-    `<div class="al-date">→ Cargar el motivo en Asistencia, o confirmar que es una falta real</div>`,action:`showView('asistencia')`});
-
   const nTarde=Object.keys(desvios.tardanzasPorPersona).length;
   if(nTarde>0) filas.push({tipo:'wa',txt:`<strong>${nTarde} persona${nTarde!==1?'s':''}</strong> con tardanza (después de ${HORA_LIMITE_ENTRADA}): ${listaNombres(desvios.tardanzasPorPersona,4)}`+
     `<div class="al-date">→ Revisar en Marcaciones si es algo puntual o recurrente</div>`,action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='entrada';renderMarcaciones();`});
@@ -1687,19 +1682,20 @@ function periodoAnterior(fechasSeleccionadas){
   return anterior.length?anterior:null;
 }
 
-function calcHeadlineStats(fechas,marca,desviosPrecalc){
+function calcHeadlineStats(fechas,marca){
   const personas=S.personas.filter(p=>!marca||p.marca===marca);
   const marc=filtrar({fechas,marca});
   const tardanzas=marc.filter(m=>esTardanza(m.entrada)).length;
   const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
   const cumplProm=personas.length?Math.round(personas.reduce((s,p)=>s+getStats(p.ci,fechas).cumplimiento,0)/personas.length):0;
-  const desvios=desviosPrecalc||calcularDesviosResumen(fechas,marca);
-  return {tardanzas,horas:Math.round(mins/60*10)/10,cumplProm,ausSinJust:Object.keys(desvios.ausenciasSinJustPorPersona).length};
+  const cisPresentes=new Set(marc.map(m=>m.ci));
+  const activas=personas.filter(p=>cisPresentes.has(p.ci)).length;
+  return {tardanzas,horas:Math.round(mins/60*10)/10,cumplProm,activas};
 }
 
-function renderResumenHeadline(fechas,marca,desviosActual){
+function renderResumenHeadline(fechas,marca){
   const cont=document.getElementById('res-headline');if(!cont)return;
-  const actual=calcHeadlineStats(fechas,marca,desviosActual);
+  const actual=calcHeadlineStats(fechas,marca);
   const fechasAnt=periodoAnterior(fechas);
   const anterior=fechasAnt?calcHeadlineStats(fechasAnt,marca):null;
 
@@ -1713,10 +1709,32 @@ function renderResumenHeadline(fechas,marca,desviosActual){
   }
 
   cont.innerHTML=`
-    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">📊 Cobertura general</div><div class="sval" style="color:var(--gn)">${actual.cumplProm}%</div>${trend(actual.cumplProm,false,'cumplProm')}</div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">📊 Cumplimiento de rutas</div><div class="sval" style="color:var(--gn)">${actual.cumplProm}%</div>${trend(actual.cumplProm,false,'cumplProm')}</div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${actual.activas}</div><div class="ssub">de ${S.personas.filter(p=>!marca||p.marca===marca).length} registradas</div></div>
     <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">⚠️ Tardanzas</div><div class="sval" style="color:var(--yw)">${actual.tardanzas}</div>${trend(actual.tardanzas,true,'tardanzas')}</div>
-    <div class="sc2" style="border-color:#c11d2a44"><div class="slbl">🔴 Ausencias sin justificar</div><div class="sval" style="color:var(--rd)">${actual.ausSinJust}</div>${trend(actual.ausSinJust,true,'ausSinJust')}</div>
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">⏱ Horas registradas</div><div class="sval" style="color:var(--bl)">${actual.horas}h</div>${trend(actual.horas,false,'horas')}</div>`;
+}
+
+// ── RANKING DE MARCAS POR CUMPLIMIENTO ───────────────────────────────────
+// "chart-marca" (mas abajo) ya mostraba visitas por marca, pero eso es
+// volumen, no desempeño -- una marca con mas gente puede tener mas visitas
+// y aun asi cumplir peor su ruta. Esto ordena las marcas por % de
+// cumplimiento promedio de su gente, para ver cual anda mejor de verdad.
+function renderRankingMarcas(fechas,marcaFiltro){
+  const cont=document.getElementById('res-ranking-marcas');if(!cont)return;
+  const marcas=marcaFiltro?[marcaFiltro]:[...new Set(S.personas.map(p=>p.marca).filter(Boolean))];
+  const filas=marcas.map(m=>{
+    const personasMarca=S.personas.filter(p=>p.marca===m);
+    const cumplProm=personasMarca.length?Math.round(personasMarca.reduce((s,p)=>s+getStats(p.ci,fechas).cumplimiento,0)/personasMarca.length):0;
+    return {marca:m,cumpl:cumplProm,n:personasMarca.length};
+  }).sort((a,b)=>b.cumpl-a.cumpl);
+
+  cont.innerHTML=filas.map((f,i)=>`
+    <div class="cr">
+      <span class="cl">${i===0&&filas.length>1?'🏆 ':''}${f.marca} <span style="color:var(--tx3);font-size:11px">(${f.n})</span></span>
+      <div class="cbg"><div class="cfi" style="width:${f.cumpl}%;background:${ptc4(f.cumpl)}"></div></div>
+      <span class="cv" style="color:${ptc4(f.cumpl)};font-weight:700">${f.cumpl}%</span>
+    </div>`).join('')||'<div class="empty" style="padding:16px">Sin datos</div>';
 }
 
 // ── RESUMEN ───────────────────────────────────────────────────────────
@@ -1731,10 +1749,20 @@ function renderResumen(){
   });
 
   const desviosActual=calcularDesviosResumen(fechas,marca);
+  renderResumenHeadline(fechas,marca);
+  renderRankingMarcas(fechas,marca);
   renderResumenDesvios(desviosActual);
-  renderResumenHeadline(fechas,marca,desviosActual);
 
-  const presentes=new Set(marc.map(m=>m.ci)).size;
+  // "Personas activas" antes contaba CUALQUIER CI que apareciera en las
+  // marcaciones filtradas (new Set(marc.map(m=>m.ci)).size) contra el total
+  // de personas REGISTRADAS HOY (S.personas.length) -- si alguien marco en
+  // el pasado y ya no esta en la nomina actual (o el CI no calza exacto),
+  // ese conteo podia terminar siendo MAYOR al total de registrados, lo cual
+  // no tiene sentido ("437 de 213 registradas"). Ahora "presentes" es un
+  // subconjunto real de S.personas: nunca puede superar al total.
+  const personasFiltradas=S.personas.filter(p=>!marca||p.marca===marca);
+  const cisPresentes=new Set(marc.map(m=>m.ci));
+  const presentes=personasFiltradas.filter(p=>cisPresentes.has(p.ci)).length;
   const pdvU=new Set(marc.map(m=>m.pdv)).size;
   const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
   const sinSalida=marc.filter(m=>m.entrada&&!m.salida).length;
@@ -1747,12 +1775,10 @@ function renderResumen(){
   const tardanzas=marc.filter(m=>esTardanza(m.entrada)).length;
   const almExcedidosArr=almF.filter(a=>a.fin&&almuerzoExcedido(dToM(a.duracion)));
   const almExcedidos=almExcedidosArr.length;
-  const almConDuracion=almF.filter(a=>a.fin&&a.duracion);
-  const almPromedioMin=almConDuracion.length>0?Math.round(almConDuracion.reduce((s,a)=>s+dToM(a.duracion),0)/almConDuracion.length):0;
 
   document.getElementById('res-stats').innerHTML=`
     <div class="sc2"><div class="slbl">Marcaciones</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
-    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">de ${S.personas.length} registradas</div></div>
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">de ${personasFiltradas.length} registradas</div></div>
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Horas registradas</div><div class="sval" style="color:var(--bl)">${Math.round(mins/60*10)/10}h</div><div class="ssub">con entrada y salida</div></div>
     <div class="sc2" style="border-color:#c11d2a44;cursor:pointer" onclick="filtrarIncompletas()">
       <div class="slbl">⚠️ Sin check out</div>
@@ -1761,6 +1787,7 @@ function renderResumen(){
     </div>`;
 
   // Second row: entradas/salidas/almuerzos/tardanzas
+  // (se saco "Promedio almuerzo" -- no aportaba a la decision operativa)
   document.getElementById('res-stats2').innerHTML=`
     <div class="sc2" style="border-color:#3b82f644"><div class="slbl">→ Entradas</div><div class="sval" style="color:var(--bl)">${entradas}</div><div class="ssub">registradas</div></div>
     <div class="sc2"><div class="slbl">← Salidas</div><div class="sval">${salidas}</div><div class="ssub">registradas</div></div>
@@ -1771,8 +1798,7 @@ function renderResumen(){
     </div>
     <div class="sc2" style="border-color:#c11d2a44;cursor:pointer" onclick="showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones()">
       <div class="slbl">🔴 Alm. excedidos</div><div class="sval" style="color:var(--rd)">${almExcedidos}</div><div class="ssub">más de ${MAX_ALMUERZO_MIN}min</div>
-    </div>
-    <div class="sc2"><div class="slbl">⏱ Promedio almuerzo</div><div class="sval">${almPromedioMin>0?mToH(almPromedioMin):'—'}</div><div class="ssub">tiempo medio</div></div>`;
+    </div>`;
 
   const pdvC={},mC={};
   marc.forEach(m=>{pdvC[m.pdv]=(pdvC[m.pdv]||0)+1;mC[m.marca]=(mC[m.marca]||0)+1;});
@@ -1787,7 +1813,7 @@ function renderResumen(){
   // almuerzo excedido/sin checkout) para que el operador vea primero a
   // quien atender, en vez de orden alfabetico.
   function tieneDesvio(ci){
-    return !!(desviosActual.tardanzasPorPersona[ci]||desviosActual.sinCheckoutPorPersona[ci]||desviosActual.almExcedidoPorPersona[ci]||desviosActual.ausenciasSinJustPorPersona[ci]);
+    return !!(desviosActual.tardanzasPorPersona[ci]||desviosActual.sinCheckoutPorPersona[ci]||desviosActual.almExcedidoPorPersona[ci]);
   }
   const personas=S.personas.filter(p=>!marca||p.marca===marca)
     .slice()
