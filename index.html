@@ -475,9 +475,11 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
         </div>
         <select class="fsel" id="f-marca-res" onchange="renderResumen()"><option value="">Todas las marcas</option></select>
       </div>
-      <div class="sg" id="res-stats"></div>
-      <div class="sg" id="res-stats2" style="grid-template-columns:repeat(7,1fr);margin-top:-8px"></div>
+      <div class="sg" id="res-headline"></div>
+      <div id="res-desvios"></div>
       <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #c11d2a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#c11d2a;font-weight:600"></div>
+      <div class="sg" id="res-stats" style="margin-top:8px"></div>
+      <div class="sg" id="res-stats2" style="grid-template-columns:repeat(7,1fr);margin-top:-8px"></div>
       <div class="twocol">
         <div class="tc"><div class="tch"><span class="tct">Top PDV visitados</span></div><div style="padding:14px" id="chart-pdv"></div></div>
         <div class="tc"><div class="tch"><span class="tct">Visitas por marca</span></div><div style="padding:14px" id="chart-marca"></div></div>
@@ -870,11 +872,25 @@ window.onload=async function(){
   const key=localStorage.getItem('marka_api_key');
   const dias=parseInt(localStorage.getItem('marka_dias'))||22;
   if(id&&key){
-    // Skip setup, go straight to app with loading overlay
+    // Skip setup, go straight to app
     S.sheetId=id; S.apiKey=key; S.diasEsperados=dias;
     document.getElementById('setup').style.display='none';
     document.getElementById('app').style.display='block';
-    // Show loading overlay
+
+    if(cargarDesdeCacheSiExiste()){
+      // Ya hay datos de la ultima sesion -- pintar de una y refrescar atras,
+      // en vez de tapar la pantalla con el loader mientras se espera a
+      // Google Sheets otra vez.
+      iniciarApp();
+      cargarDatosAPI().then(()=>{
+        poblarFiltros(true); renderVistaActiva(); renderSBP();
+      }).catch(e=>{
+        console.log('[CACHE] Fallo el refresco en segundo plano, se sigue mostrando la cache local:',e.message);
+      });
+      return;
+    }
+
+    // Sin cache (primera vez en este navegador): mostrar el loader como antes.
     const loader=document.createElement('div');
     loader.id='loader-overlay';
     loader.style.cssText='position:fixed;inset:0;background:rgba(26,31,46,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
@@ -909,16 +925,18 @@ async function conectar(){
   catch(e){alert('Error al conectar: '+e.message+'\n\nVerificá que la planilla sea pública y la API key sea correcta.');}
 }
 
-async function cargarDatosAPI(){
-  const base=`https://sheets.googleapis.com/v4/spreadsheets/${S.sheetId}/values`;
-  const k=`?key=${S.apiKey}`;
+async function fetchPersonasAPI(base,k){
   const r2=await fetch(`${base}/Hoja%202!A2:C2000${k}`);
   const d2=await r2.json();
   if(d2.error)throw new Error(d2.error.message);
-  S.personas=(d2.values||[]).map(r=>({nombre:(r[0]||'').trim(),ci:String(r[1]||'').trim().split('.')[0],marca:(r[2]||'').trim()})).filter(p=>p.nombre&&p.ci);
+  let personas=(d2.values||[]).map(r=>({nombre:(r[0]||'').trim(),ci:String(r[1]||'').trim().split('.')[0],marca:(r[2]||'').trim()})).filter(p=>p.nombre&&p.ci);
   // Deduplicar por CI
   const seen=new Set();
-  S.personas=S.personas.filter(p=>{if(seen.has(p.ci))return false;seen.add(p.ci);return true;});
+  personas=personas.filter(p=>{if(seen.has(p.ci))return false;seen.add(p.ci);return true;});
+  return personas;
+}
+
+async function fetchMarcacionesAPI(base,k){
   // Load all rows - paginate if > 10000 rows (now includes lat/lng cols H-K)
   let allRows=[];
   let startRow=2;
@@ -935,7 +953,7 @@ async function cargarDatosAPI(){
     if(startRow>200000) keepLoading=false; // safety limit
   }
   const rawRows=allRows;
-  S.marcaciones=rawRows.map((r,i)=>{
+  const marcaciones=rawRows.map((r,i)=>{
     const ci=String(r[0]||'').trim().split('.')[0],nombre=(r[1]||'').trim(),marca=(r[2]||'').trim();
     const pdv=(r[3]||'').trim(),fechaRaw=(r[4]||'').trim();
     const entrada=pH(r[5]||''),salida=pH(r[6]||'');
@@ -947,16 +965,19 @@ async function cargarDatosAPI(){
       console.log(`[Marcación ${i}/${rawRows.length-1}] raw="${JSON.stringify(r[4])}" fechaRaw="${fechaRaw}" parsed="${fecha}"`);
     return{id:i,ci,nombre,marca,pdv,fecha,entrada,salida,duracion:cDur(entrada,salida),latIn,lngIn,latOut,lngOut};
   }).filter(m=>m.nombre&&m.fecha);
-  const fechasUnicas=sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
-  console.log(`[FECHAS CARGADAS] ${S.marcaciones.length} filas, ${fechasUnicas.length} fechas: ${fechasUnicas.join(' | ')}`);
+  const fechasUnicas=sortFechas([...new Set(marcaciones.map(m=>m.fecha))]);
+  console.log(`[FECHAS CARGADAS] ${marcaciones.length} filas, ${fechasUnicas.length} fechas: ${fechasUnicas.join(' | ')}`);
   console.log(`[ULTIMA FECHA] ${fechasUnicas[fechasUnicas.length-1]||'NINGUNA'}`);
+  return marcaciones;
+}
 
+async function fetchAlmuerzosAPI(base,k){
   // ── FICHAJES (almuerzos) ─────────────────────────────────────────
   try{
     const rF=await fetch(`${base}/Fichajes!A2:G9999${k}`);
     const dF=await rF.json();
     if(!dF.error){
-      S.almuerzos=(dF.values||[]).map((r,i)=>{
+      const almuerzos=(dF.values||[]).map((r,i)=>{
         const fechaRaw=(r[0]||'').trim();
         const ci=String(r[1]||'').trim().split('.')[0];
         const nombre=(r[2]||'').trim();
@@ -967,17 +988,60 @@ async function cargarDatosAPI(){
         const fecha=pF(fechaRaw);
         return{id:i,ci,nombre,marca,pdv,fecha,inicio,fin,duracion:cDur(inicio,fin)};
       }).filter(a=>a.nombre&&a.fecha);
-      console.log(`[FICHAJES/ALMUERZOS] ${S.almuerzos.length} registros cargados`);
+      console.log(`[FICHAJES/ALMUERZOS] ${almuerzos.length} registros cargados`);
+      return almuerzos;
     } else {
-      S.almuerzos=[];
       console.log('[FICHAJES] Hoja no encontrada o sin datos:',dF.error.message);
+      return [];
     }
   }catch(e){
-    S.almuerzos=[];
     console.log('[FICHAJES] Error al cargar:',e.message);
+    return [];
   }
+}
+
+async function cargarDatosAPI(){
+  const base=`https://sheets.googleapis.com/v4/spreadsheets/${S.sheetId}/values`;
+  const k=`?key=${S.apiKey}`;
+  // Las 3 hojas (personas, marcaciones paginada, almuerzos) son
+  // independientes entre si -- antes se pedian una despues de la otra
+  // (await secuencial), sumando sus tiempos de red. Pedirlas en paralelo
+  // reduce la carga inicial al tiempo del mas lento de los 3, no a la suma.
+  const [personas,marcaciones,almuerzos]=await Promise.all([
+    fetchPersonasAPI(base,k),
+    fetchMarcacionesAPI(base,k),
+    fetchAlmuerzosAPI(base,k),
+  ]);
+  S.personas=personas;
+  S.marcaciones=marcaciones;
+  S.almuerzos=almuerzos;
 
   buildIndices();
+
+  // Cache local para la proxima apertura de la pagina (stale-while-revalidate,
+  // ver cargarDesdeCacheSiExiste()) -- si falla (localStorage lleno/deshabilitado)
+  // no es grave, simplemente la proxima carga no tiene cache para pintar de una.
+  try{
+    localStorage.setItem('marka_cache_data',JSON.stringify({personas:S.personas,marcaciones:S.marcaciones,almuerzos:S.almuerzos}));
+    localStorage.setItem('marka_cache_ts',String(Date.now()));
+  }catch(e){ console.log('[CACHE] No se pudo guardar cache local:',e.message); }
+}
+
+// Pinta la app al toque con lo que haya quedado guardado de la ultima carga
+// exitosa, mientras cargarDatosAPI() trae los datos frescos en segundo plano
+// -- antes, CADA apertura de la pagina (y cada reconexion) esperaba las 3
+// idas y vueltas a Google Sheets con la pantalla en blanco, aunque los datos
+// de la sesion anterior siguieran siendo utiles mientras tanto.
+function cargarDesdeCacheSiExiste(){
+  try{
+    const raw=localStorage.getItem('marka_cache_data');
+    if(!raw) return false;
+    const data=JSON.parse(raw);
+    if(!data||!Array.isArray(data.personas)||!Array.isArray(data.marcaciones)) return false;
+    S.personas=data.personas; S.marcaciones=data.marcaciones; S.almuerzos=data.almuerzos||[];
+    buildIndices();
+    return true;
+  }catch(e){ return false; }
 }
 
 // ── ÍNDICES DE RENDIMIENTO ───────────────────────────────────────────
@@ -1535,6 +1599,126 @@ function filterSB(){
 // la navegación entre pestañas sea instantánea la primera vez.
 function renderAll(){renderResumen();renderAsistencia();renderMarcaciones();renderProductividad();}
 
+// ── RESUMEN: DESVÍOS Y TENDENCIA ────────────────────────────────────────
+// Toda la logica de "que esta mal y a quien le pasa" reutiliza los mismos
+// umbrales/criterios que ya existian (esTardanza, almuerzoExcedido, CATS/
+// restaProd) -- no se inventa un criterio nuevo de que cuenta como desvio,
+// solo se agrupa y se muestra de forma mas util que un conteo suelto.
+function calcularDesviosResumen(fechas,marca){
+  const fechasEval=(fechas&&fechas.length)?fechas:(S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]));
+  const personas=S.personas.filter(p=>!marca||p.marca===marca);
+  const tardanzasPorPersona={},sinCheckoutPorPersona={},almExcedidoPorPersona={},ausenciasSinJustPorPersona={};
+
+  personas.forEach(p=>{
+    const marcPersona=(S._idxPorCI&&S._idxPorCI[p.ci])||S.marcaciones.filter(m=>m.ci===p.ci);
+    const marcEnPeriodo=marcPersona.filter(m=>fechasEval.includes(m.fecha));
+    const fechasTrabajadas=new Set(marcEnPeriodo.map(m=>m.fecha));
+
+    marcEnPeriodo.forEach(m=>{
+      if(esTardanza(m.entrada)) (tardanzasPorPersona[p.ci]=tardanzasPorPersona[p.ci]||[]).push(m.fecha);
+      if(m.entrada&&!m.salida) (sinCheckoutPorPersona[p.ci]=sinCheckoutPorPersona[p.ci]||[]).push(m.fecha);
+    });
+
+    S.almuerzos.filter(a=>a.ci===p.ci&&fechasEval.includes(a.fecha)).forEach(a=>{
+      if(a.fin&&almuerzoExcedido(dToM(a.duracion))) (almExcedidoPorPersona[p.ci]=almExcedidoPorPersona[p.ci]||[]).push(a.fecha);
+    });
+
+    fechasEval.forEach(f=>{
+      if(!fechasTrabajadas.has(f)){
+        const obs=getDO(p.ci,f);
+        if(!obs.cat||restaProd(obs.cat)) (ausenciasSinJustPorPersona[p.ci]=ausenciasSinJustPorPersona[p.ci]||[]).push(f);
+      }
+    });
+  });
+
+  return {tardanzasPorPersona,sinCheckoutPorPersona,almExcedidoPorPersona,ausenciasSinJustPorPersona};
+}
+
+function renderResumenDesvios(desvios){
+  const cont=document.getElementById('res-desvios');if(!cont)return;
+  const nombreDe=ci=>(S.personas.find(p=>p.ci===ci)||{}).nombre||ci;
+  function listaNombres(porPersona,maxN){
+    const nombres=Object.keys(porPersona).map(nombreDe);
+    if(nombres.length<=maxN) return nombres.join(', ');
+    return nombres.slice(0,maxN).join(', ')+` y ${nombres.length-maxN} más`;
+  }
+
+  const filas=[];
+  const nAus=Object.keys(desvios.ausenciasSinJustPorPersona).length;
+  if(nAus>0) filas.push({tipo:'er',txt:`<strong>${nAus} persona${nAus!==1?'s':''}</strong> con ausencia sin justificar: ${listaNombres(desvios.ausenciasSinJustPorPersona,4)}`+
+    `<div class="al-date">→ Cargar el motivo en Asistencia, o confirmar que es una falta real</div>`,action:`showView('asistencia')`});
+
+  const nTarde=Object.keys(desvios.tardanzasPorPersona).length;
+  if(nTarde>0) filas.push({tipo:'wa',txt:`<strong>${nTarde} persona${nTarde!==1?'s':''}</strong> con tardanza (después de ${HORA_LIMITE_ENTRADA}): ${listaNombres(desvios.tardanzasPorPersona,4)}`+
+    `<div class="al-date">→ Revisar en Marcaciones si es algo puntual o recurrente</div>`,action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='entrada';renderMarcaciones();`});
+
+  const nAlm=Object.keys(desvios.almExcedidoPorPersona).length;
+  if(nAlm>0) filas.push({tipo:'pu',txt:`<strong>${nAlm} persona${nAlm!==1?'s':''}</strong> con almuerzo excedido (más de ${MAX_ALMUERZO_MIN}min): ${listaNombres(desvios.almExcedidoPorPersona,4)}`+
+    `<div class="al-date">→ Confirmar el motivo con la persona</div>`,action:`showView('marcaciones');document.getElementById('f-tipo-marc').value='almuerzo_fin';renderMarcaciones();`});
+
+  const nSinCO=Object.keys(desvios.sinCheckoutPorPersona).length;
+  if(nSinCO>0) filas.push({tipo:'in',txt:`<strong>${nSinCO} persona${nSinCO!==1?'s':''}</strong> sin check-out: ${listaNombres(desvios.sinCheckoutPorPersona,4)}`+
+    `<div class="al-date">→ Pedir que cierre la marcación o cargarla a mano</div>`,action:`filtrarIncompletas();`});
+
+  const dotMap={er:'al-dot-er',wa:'al-dot-wa',pu:'al-dot-pu',in:'al-dot-in'};
+  const itemsHTML=filas.map(f=>`<div class="al-item" style="cursor:pointer" onclick="${f.action}"><div class="al-dot ${dotMap[f.tipo]}"></div><div class="al-body">${f.txt}</div></div>`).join('');
+
+  cont.innerHTML=`
+    <div class="al-panel" style="margin-top:0;margin-bottom:16px">
+      <div class="al-head">
+        <h3>🎯 Desvíos del período</h3>
+        <span class="al-badge ${filas.length>0?'red':'ok'}">${filas.length>0?filas.length+' tipo'+(filas.length!==1?'s':'')+' de desvío':'Sin desvíos'}</span>
+      </div>
+      <div class="al-list">${itemsHTML||'<div class="al-item"><div class="al-dot al-dot-in"></div><div class="al-body">✓ Sin desvíos para este período y filtro — todo en orden.</div></div>'}</div>
+    </div>`;
+}
+
+// Rango de fechas equivalente al anterior (misma cantidad de fechas con
+// datos, corrido hacia atras) -- null si se esta viendo "todo el periodo"
+// (no hay un "anterior" razonable) o si no hay suficiente historial.
+function periodoAnterior(fechasSeleccionadas){
+  if(!fechasSeleccionadas||!fechasSeleccionadas.length) return null;
+  const todas=S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]);
+  const ordenadas=sortFechas(fechasSeleccionadas);
+  const idxInicio=todas.indexOf(ordenadas[0]);
+  if(idxInicio<=0) return null;
+  const n=fechasSeleccionadas.length;
+  const anterior=todas.slice(Math.max(0,idxInicio-n),idxInicio);
+  return anterior.length?anterior:null;
+}
+
+function calcHeadlineStats(fechas,marca,desviosPrecalc){
+  const personas=S.personas.filter(p=>!marca||p.marca===marca);
+  const marc=filtrar({fechas,marca});
+  const tardanzas=marc.filter(m=>esTardanza(m.entrada)).length;
+  const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
+  const cumplProm=personas.length?Math.round(personas.reduce((s,p)=>s+getStats(p.ci,fechas).cumplimiento,0)/personas.length):0;
+  const desvios=desviosPrecalc||calcularDesviosResumen(fechas,marca);
+  return {tardanzas,horas:Math.round(mins/60*10)/10,cumplProm,ausSinJust:Object.keys(desvios.ausenciasSinJustPorPersona).length};
+}
+
+function renderResumenHeadline(fechas,marca,desviosActual){
+  const cont=document.getElementById('res-headline');if(!cont)return;
+  const actual=calcHeadlineStats(fechas,marca,desviosActual);
+  const fechasAnt=periodoAnterior(fechas);
+  const anterior=fechasAnt?calcHeadlineStats(fechasAnt,marca):null;
+
+  function trend(actualVal,invertido,campo){
+    if(!anterior) return `<div class="ssub">vs. período anterior: —</div>`;
+    const anteriorVal=anterior[campo];
+    const delta=actualVal-anteriorVal;
+    if(delta===0) return `<div class="ssub">＝ sin cambios vs. anterior</div>`;
+    const mejora=invertido?delta<0:delta>0;
+    return `<div class="ssub" style="color:${mejora?'var(--gn)':'var(--rd)'};font-weight:600">${delta>0?'↑':'↓'} ${Math.abs(delta)} vs. período anterior</div>`;
+  }
+
+  cont.innerHTML=`
+    <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">📊 Cobertura general</div><div class="sval" style="color:var(--gn)">${actual.cumplProm}%</div>${trend(actual.cumplProm,false,'cumplProm')}</div>
+    <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">⚠️ Tardanzas</div><div class="sval" style="color:var(--yw)">${actual.tardanzas}</div>${trend(actual.tardanzas,true,'tardanzas')}</div>
+    <div class="sc2" style="border-color:#c11d2a44"><div class="slbl">🔴 Ausencias sin justificar</div><div class="sval" style="color:var(--rd)">${actual.ausSinJust}</div>${trend(actual.ausSinJust,true,'ausSinJust')}</div>
+    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">⏱ Horas registradas</div><div class="sval" style="color:var(--bl)">${actual.horas}h</div>${trend(actual.horas,false,'horas')}</div>`;
+}
+
 // ── RESUMEN ───────────────────────────────────────────────────────────
 function renderResumen(){
   const fechas=getSelDates('mdd-res');
@@ -1545,6 +1729,11 @@ function renderResumen(){
     if(marca&&a.marca!==marca)return false;
     return true;
   });
+
+  const desviosActual=calcularDesviosResumen(fechas,marca);
+  renderResumenDesvios(desviosActual);
+  renderResumenHeadline(fechas,marca,desviosActual);
+
   const presentes=new Set(marc.map(m=>m.ci)).size;
   const pdvU=new Set(marc.map(m=>m.pdv)).size;
   const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
@@ -1593,12 +1782,21 @@ function renderResumen(){
   document.getElementById('chart-pdv').innerHTML=pdvT.map(([p,c])=>`<div class="cr"><span class="cl" title="${p}">${p.length>18?p.slice(0,18)+'…':p}</span><div class="cbg"><div class="cfi" style="width:${c/pm*100}%"></div></div><span class="cv">${c}</span></div>`).join('')||'<div class="empty" style="padding:16px">Sin datos</div>';
   document.getElementById('chart-marca').innerHTML=mT.map(([m,c])=>`<div class="cr"><span class="cl">${m}</span><div class="cbg"><div class="cfi" style="width:${c/mm*100}%"></div></div><span class="cv">${c}</span></div>`).join('')||'<div class="empty" style="padding:16px">Sin datos</div>';
 
-  // Cards — grouped by persona, show unique info
-  const personas=S.personas.filter(p=>!marca||p.marca===marca);
+  // Cards — grouped by persona, show unique info. Se ordena primero por
+  // quien tiene algun desvio activo (tardanza/ausencia sin justificar/
+  // almuerzo excedido/sin checkout) para que el operador vea primero a
+  // quien atender, en vez de orden alfabetico.
+  function tieneDesvio(ci){
+    return !!(desviosActual.tardanzasPorPersona[ci]||desviosActual.sinCheckoutPorPersona[ci]||desviosActual.almExcedidoPorPersona[ci]||desviosActual.ausenciasSinJustPorPersona[ci]);
+  }
+  const personas=S.personas.filter(p=>!marca||p.marca===marca)
+    .slice()
+    .sort((a,b)=>(tieneDesvio(b.ci)?1:0)-(tieneDesvio(a.ci)?1:0));
   document.getElementById('res-cards').innerHTML=personas.map(p=>{
     const st=getStats(p.ci,fechas);const pct=st.cumplimiento;
-    return`<div class="pcard" onclick="openPersona('${p.ci}')">
-      <div class="pcn">${p.nombre}</div>
+    const conDesvio=tieneDesvio(p.ci);
+    return`<div class="pcard" onclick="openPersona('${p.ci}')" style="${conDesvio?'border-color:#c11d2a44':''}">
+      <div class="pcn">${p.nombre}${conDesvio?' <span style="font-size:10px;font-weight:700;color:var(--rd)">⚠️ desvío</span>':''}</div>
       <div class="pcr">${p.marca}</div>
       <div class="pcb">
         ${st.dias>0?`<span class="pill pg">✓ ${st.dias} presente${st.dias!==1?'s':''}</span>`:''}
