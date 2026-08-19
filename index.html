@@ -476,16 +476,18 @@ body.dark .map-box .leaflet-container{background:#1a1d27;}
         <select class="fsel" id="f-marca-res" onchange="renderResumen()"><option value="">Todas las marcas</option></select>
       </div>
       <div class="sg" id="res-headline"></div>
-      <div class="tc" style="margin-bottom:16px"><div class="tch"><span class="tct">🏆 Ranking de marcas por cumplimiento</span></div><div style="padding:14px" id="res-ranking-marcas"></div></div>
+      <div class="twocol" style="margin-bottom:16px">
+        <div class="tc"><div class="tch"><span class="tct">🏆 Ranking de marcas por cumplimiento</span></div><div style="padding:14px" id="res-ranking-marcas"></div></div>
+        <div class="tc" id="res-ausencias-anchor"><div class="tch"><span class="tct">😔 Personas con más ausencias / sin check-in</span></div><div style="padding:14px" id="res-ranking-ausencias"></div></div>
+      </div>
       <div id="res-desvios"></div>
       <div id="j-alert-banner" style="display:none;background:#fdecea;border:1px solid #c11d2a44;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:13px;color:#c11d2a;font-weight:600"></div>
-      <div class="sg" id="res-stats" style="margin-top:8px"></div>
+      <div class="sg" id="res-stats" style="margin-top:8px;grid-template-columns:repeat(3,1fr)"></div>
       <div class="sg" id="res-stats2" style="grid-template-columns:repeat(6,1fr);margin-top:-8px"></div>
       <div class="twocol">
         <div class="tc"><div class="tch"><span class="tct">Top PDV visitados</span></div><div style="padding:14px" id="chart-pdv"></div></div>
         <div class="tc"><div class="tch"><span class="tct">Visitas por marca</span></div><div style="padding:14px" id="chart-marca"></div></div>
       </div>
-      <div class="cg" id="res-cards"></div>
     </div>
     <!-- ASISTENCIA -->
     <div id="view-asistencia" class="content" style="display:none">
@@ -1479,8 +1481,12 @@ function poblarFiltros(){
   // Reset calendar state for each date selector (nuevas fechas pueden haber llegado)
   ['res','asist','marc','prod','pdv','aus','mapa'].forEach(prefix=>{
     const btn=document.getElementById(`mdb-${prefix}`);if(!btn)return;
-    // Asistencia arranca enfocada en el último día con datos por defecto; el resto sin filtro (todas las fechas)
-    if(prefix==='asist'&&fechas.length){
+    // Asistencia y Resumen arrancan enfocados en el último día con datos por
+    // defecto (el pedido fue "que el resumen muestre siempre el dia
+    // actual"); el resto sin filtro (todas las fechas). El usuario puede
+    // seguir eligiendo un rango propio con el selector de fechas -- este
+    // default solo aplica mientras no haya nada elegido a mano.
+    if((prefix==='asist'||prefix==='res')&&fechas.length){
       CAL_STATE[prefix]={viewMonth:dToDate(fechas[fechas.length-1]),start:fechas[fechas.length-1],end:fechas[fechas.length-1],pickingEnd:false};
     } else if(!CAL_STATE[prefix]){
       CAL_STATE[prefix]={viewMonth:fechas.length?dToDate(fechas[fechas.length-1]):new Date(),start:null,end:null,pickingEnd:false};
@@ -1686,11 +1692,11 @@ function calcHeadlineStats(fechas,marca){
   const personas=S.personas.filter(p=>!marca||p.marca===marca);
   const marc=filtrar({fechas,marca});
   const tardanzas=marc.filter(m=>esTardanza(m.entrada)).length;
-  const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
   const cumplProm=personas.length?Math.round(personas.reduce((s,p)=>s+getStats(p.ci,fechas).cumplimiento,0)/personas.length):0;
   const cisPresentes=new Set(marc.map(m=>m.ci));
   const activas=personas.filter(p=>cisPresentes.has(p.ci)).length;
-  return {tardanzas,horas:Math.round(mins/60*10)/10,cumplProm,activas};
+  const sinCheckin=personas.length-activas;
+  return {tardanzas,cumplProm,activas,sinCheckin};
 }
 
 function renderResumenHeadline(fechas,marca){
@@ -1712,7 +1718,7 @@ function renderResumenHeadline(fechas,marca){
     <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">📊 Cumplimiento de rutas</div><div class="sval" style="color:var(--gn)">${actual.cumplProm}%</div>${trend(actual.cumplProm,false,'cumplProm')}</div>
     <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${actual.activas}</div><div class="ssub">de ${S.personas.filter(p=>!marca||p.marca===marca).length} registradas</div></div>
     <div class="sc2" style="border-color:#f59e0b44"><div class="slbl">⚠️ Tardanzas</div><div class="sval" style="color:var(--yw)">${actual.tardanzas}</div>${trend(actual.tardanzas,true,'tardanzas')}</div>
-    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">⏱ Horas registradas</div><div class="sval" style="color:var(--bl)">${actual.horas}h</div>${trend(actual.horas,false,'horas')}</div>`;
+    <div class="sc2" style="border-color:#c11d2a44;cursor:pointer" onclick="document.getElementById('res-ausencias-anchor')?.scrollIntoView({behavior:'smooth'})"><div class="slbl">❌ Sin check-in</div><div class="sval" style="color:var(--rd)">${actual.sinCheckin}</div>${trend(actual.sinCheckin,true,'sinCheckin')}</div>`;
 }
 
 // ── RANKING DE MARCAS POR CUMPLIMIENTO ───────────────────────────────────
@@ -1751,6 +1757,7 @@ function renderResumen(){
   const desviosActual=calcularDesviosResumen(fechas,marca);
   renderResumenHeadline(fechas,marca);
   renderRankingMarcas(fechas,marca);
+  renderRankingAusencias(fechas,marca);
   renderResumenDesvios(desviosActual);
 
   // "Personas activas" antes contaba CUALQUIER CI que apareciera en las
@@ -1764,7 +1771,6 @@ function renderResumen(){
   const cisPresentes=new Set(marc.map(m=>m.ci));
   const presentes=personasFiltradas.filter(p=>cisPresentes.has(p.ci)).length;
   const pdvU=new Set(marc.map(m=>m.pdv)).size;
-  const mins=marc.reduce((s,m)=>s+dToM(m.duracion),0);
   const sinSalida=marc.filter(m=>m.entrada&&!m.salida).length;
 
   // New indicators
@@ -1779,7 +1785,6 @@ function renderResumen(){
   document.getElementById('res-stats').innerHTML=`
     <div class="sc2"><div class="slbl">Marcaciones</div><div class="sval">${marc.length}</div><div class="ssub">${fechas?fechas.length+' fecha(s)':'Todo el período'}</div></div>
     <div class="sc2" style="border-color:#3cb3a844"><div class="slbl">Personas activas</div><div class="sval" style="color:var(--gn)">${presentes}</div><div class="ssub">de ${personasFiltradas.length} registradas</div></div>
-    <div class="sc2" style="border-color:#3b82f644"><div class="slbl">Horas registradas</div><div class="sval" style="color:var(--bl)">${Math.round(mins/60*10)/10}h</div><div class="ssub">con entrada y salida</div></div>
     <div class="sc2" style="border-color:#c11d2a44;cursor:pointer" onclick="filtrarIncompletas()">
       <div class="slbl">⚠️ Sin check out</div>
       <div class="sval" style="color:var(--rd)">${sinSalida}</div>
@@ -1808,31 +1813,29 @@ function renderResumen(){
   document.getElementById('chart-pdv').innerHTML=pdvT.map(([p,c])=>`<div class="cr"><span class="cl" title="${p}">${p.length>18?p.slice(0,18)+'…':p}</span><div class="cbg"><div class="cfi" style="width:${c/pm*100}%"></div></div><span class="cv">${c}</span></div>`).join('')||'<div class="empty" style="padding:16px">Sin datos</div>';
   document.getElementById('chart-marca').innerHTML=mT.map(([m,c])=>`<div class="cr"><span class="cl">${m}</span><div class="cbg"><div class="cfi" style="width:${c/mm*100}%"></div></div><span class="cv">${c}</span></div>`).join('')||'<div class="empty" style="padding:16px">Sin datos</div>';
 
-  // Cards — grouped by persona, show unique info. Se ordena primero por
-  // quien tiene algun desvio activo (tardanza/ausencia sin justificar/
-  // almuerzo excedido/sin checkout) para que el operador vea primero a
-  // quien atender, en vez de orden alfabetico.
-  function tieneDesvio(ci){
-    return !!(desviosActual.tardanzasPorPersona[ci]||desviosActual.sinCheckoutPorPersona[ci]||desviosActual.almExcedidoPorPersona[ci]);
-  }
-  const personas=S.personas.filter(p=>!marca||p.marca===marca)
-    .slice()
-    .sort((a,b)=>(tieneDesvio(b.ci)?1:0)-(tieneDesvio(a.ci)?1:0));
-  document.getElementById('res-cards').innerHTML=personas.map(p=>{
-    const st=getStats(p.ci,fechas);const pct=st.cumplimiento;
-    const conDesvio=tieneDesvio(p.ci);
-    return`<div class="pcard" onclick="openPersona('${p.ci}')" style="${conDesvio?'border-color:#c11d2a44':''}">
-      <div class="pcn">${p.nombre}${conDesvio?' <span style="font-size:10px;font-weight:700;color:var(--rd)">⚠️ desvío</span>':''}</div>
-      <div class="pcr">${p.marca}</div>
-      <div class="pcb">
-        ${st.dias>0?`<span class="pill pg">✓ ${st.dias} presente${st.dias!==1?'s':''}</span>`:''}
-        <span class="pill pgr">— ${S.diasEsperados-st.dias} s/registrar</span>
-        ${st.totalMins>0?`<span class="pill pbl">${st.horas}</span>`:''}
-      </div>
-      <div class="pcpl"><span>Cobertura</span><strong style="color:${ptc4(pct)}">${pemoji4(pct)} ${pct}%</strong></div>
-      <div class="pb"><div class="pf ${pc4(pct)}" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
+}
+
+// ── RANKING DE AUSENCIAS / SIN CHECK-IN POR PERSONA ─────────────────────
+// Reemplaza a las tarjetas por persona (que no se usaban) -- responde
+// directo "quien es el/la que mas ausencias tiene o no hace check-in",
+// usando solo datos de la planilla (marcaciones), sin depender de
+// observaciones locales del navegador.
+function renderRankingAusencias(fechas,marca){
+  const cont=document.getElementById('res-ranking-ausencias');if(!cont)return;
+  const fechasEval=(fechas&&fechas.length)?fechas:(S._todasFechas||sortFechas([...new Set(S.marcaciones.map(m=>m.fecha))]));
+  const personas=S.personas.filter(p=>!marca||p.marca===marca);
+  const filas=personas.map(p=>{
+    const marcPersona=(S._idxPorCI&&S._idxPorCI[p.ci])||S.marcaciones.filter(m=>m.ci===p.ci);
+    const trabajadas=new Set(marcPersona.filter(m=>fechasEval.includes(m.fecha)).map(m=>m.fecha)).size;
+    return {nombre:p.nombre,marca:p.marca,ausencias:fechasEval.length-trabajadas,total:fechasEval.length};
+  }).filter(f=>f.ausencias>0).sort((a,b)=>b.ausencias-a.ausencias).slice(0,8);
+
+  cont.innerHTML=filas.map(f=>`
+    <div class="cr">
+      <span class="cl">${f.nombre} <span style="color:var(--tx3);font-size:11px">(${f.marca})</span></span>
+      <div class="cbg"><div class="cfi" style="width:${Math.round(f.ausencias/f.total*100)}%;background:var(--rd)"></div></div>
+      <span class="cv" style="color:var(--rd);font-weight:700">${f.ausencias}/${f.total}</span>
+    </div>`).join('')||'<div class="empty" style="padding:16px">✓ Nadie con ausencias en este período</div>';
 }
 
 // ── ASISTENCIA ────────────────────────────────────────────────────────
